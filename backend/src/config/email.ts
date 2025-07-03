@@ -11,12 +11,12 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-/**
- * Envia um e-mail usando o nodemailer
+/*
  * @param to - Email do destinatário
  * @param subject - Assunto do e-mail
  * @param text - Corpo do e-mail
  */
+
 export async function enviarEmail(to: string, subject: string, text: string): Promise<void> {
   try {
     const info = await transporter.sendMail({
@@ -25,7 +25,6 @@ export async function enviarEmail(to: string, subject: string, text: string): Pr
       subject,
       text,
     });
-
     console.log('E-mail enviado:', info.messageId);
   } catch (error) {
     console.error('Erro ao enviar e-mail:', error);

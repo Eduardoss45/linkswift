@@ -1,4 +1,5 @@
-import { RegisterData, LoginData, ApiResponse, ErrorResponse } from '../interfaces/Response';
+// TODO: Verificar se o funcionamento não foi comprometido.
+import { RegisterData, LoginData, ApiResponse, ErrorResponse, User } from '../interfaces/Response';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
@@ -74,8 +75,10 @@ export const useConnectApi = () => {
         email,
       });
       setResponse(res.data);
+      return res.data; // <-- retorne a resposta aqui
     } catch (error) {
       handleApiError(error);
+      throw error; // rethrow para o componente tratar
     } finally {
       setLoading(false);
     }
@@ -137,13 +140,15 @@ export const useConnectApi = () => {
       const res = await api.post<ApiResponse>(import.meta.env.VITE_ROTA_REFRESH_TOKEN, null, {
         withCredentials: true,
       });
-      const newToken = res.data?.token;
-      if (newToken) {
-        localStorage.setItem('jwt_token', newToken);
+      const { token, user } = res.data || {};
+      if (token && user) {
+        localStorage.setItem('jwt_token', token);
+        localStorage.setItem('user_data', JSON.stringify(user));
+        setUser(user);
         setResponse(res.data);
-        scheduleRefresh(newToken);
+        scheduleRefresh(token);
       } else {
-        setError({ message: 'Erro ao atualizar token' });
+        setError({ message: res.data?.message || 'Erro ao atualizar token' });
       }
     } catch (error) {
       handleApiError(error);
@@ -151,6 +156,25 @@ export const useConnectApi = () => {
       setLoading(false);
     }
   }, [scheduleRefresh]);
+
+  const resendVerifyEmailCode = useCallback(async (email: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.post<ApiResponse>(
+        import.meta.env.VITE_ROTA_REENVIO_CODIGO_VERIFICACAO_EMAIL,
+        { email: email },
+        {
+          withCredentials: true,
+        }
+      );
+      setResponse(res.data);
+    } catch (error) {
+      handleApiError(error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const reset = () => {
     setError(null);
@@ -175,6 +199,7 @@ export const useConnectApi = () => {
     loginUser,
     logoutUser,
     refreshToken,
+    resendVerifyEmailCode,
     loading,
     error,
     response,

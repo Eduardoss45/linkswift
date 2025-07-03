@@ -92,10 +92,44 @@ export const verificarCodigo = async (req: Request, res: Response) => {
   }
 };
 
+// * Reenviar codigo
+export const reenviarCodigo = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  if (!email) {
+    sendErrorResponse(res, 400, 'Email é obrigatório.');
+    return;
+  }
+
+  try {
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      sendErrorResponse(res, 404, 'Usuário não encontrado.');
+      return;
+    }
+
+    const verificationCode = crypto.randomBytes(3).toString('hex').toUpperCase();
+
+    user.verificationCode = verificationCode;
+    await user.save();
+    await enviarEmail(
+      email,
+      'Verifique seu e-mail',
+      `Olá, ${user.name}!\n\nSeu novo código de verificação é: ${verificationCode}`
+    );
+    sendSuccessResponse(res, 200, 'Código de verificação reenviado com sucesso.');
+    return;
+  } catch (error) {
+    console.error(error);
+    sendErrorResponse(res, 500, 'Erro interno do servidor.');
+    return;
+  }
+};
+
 // * Login
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
-  console.log(email, password);
   if (!email || !password) {
     sendErrorResponse(res, 400, 'Verifique se os campos email e password foram preenchidos.');
   }
@@ -130,6 +164,7 @@ export const login = async (req: Request, res: Response) => {
         id: user._id,
         email: user.email,
         name: user.name,
+        verified: user.verificado,
       },
     });
   } catch (error) {
@@ -159,6 +194,12 @@ export const refreshToken = async (req: Request, res: Response) => {
     });
     sendSuccessResponse(res, 200, 'Token atualizado com sucesso.', {
       token: newAccessToken,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        verified: user.verificado,
+      },
     });
   } catch (error: any) {
     if (error.name === 'TokenExpiredError') {

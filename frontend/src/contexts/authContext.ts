@@ -2,7 +2,14 @@ import { createContext } from 'react';
 import { User } from '@/interfaces/Response';
 
 export interface AuthContextType {
-  user: User | null;
+  user:
+    | {
+        id: string;
+        email: string;
+        name: string;
+        verified: boolean;
+      }
+    | User;
   isLoggedIn: boolean;
 }
 

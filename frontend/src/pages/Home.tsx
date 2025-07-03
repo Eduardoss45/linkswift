@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+// import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Toaster, toast } from 'sonner';
 
-import Logo from '../assets/logo.png';
+// import Logo from '../assets/logo.png';
 
 const Home = () => {
   const [isPrivate, setIsPrivate] = useState(false);
@@ -16,7 +16,7 @@ const Home = () => {
   const [linkName, setLinkName] = useState('');
   const [url, setUrl] = useState('');
   const [shortLink, setShortLink] = useState('');
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const handleCopy = () => {
     if (shortLink) {
@@ -66,49 +66,9 @@ const Home = () => {
     toast.success('Link encurtado com sucesso!');
   };
 
-  console.log(setUserLoggedIn, handleAdminAccess); // ! remover
-
   return (
     <div className="p-6 space-y-8 bg-gray-100 min-h-screen">
       <Toaster richColors />
-
-      <header className="bg-white rounded-2xl shadow px-6 py-4 flex justify-between items-center">
-        <img src={Logo} className="h-12" alt="Logo" onClick={() => navigate('/home')} />
-        <nav>
-          <ul className="flex items-center gap-6 text-sm font-medium text-gray-700">
-            {!userLoggedIn && (
-              <>
-                <li>
-                  <button onClick={() => navigate('/login')} className="hover:underline">
-                    Login
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => navigate('/register')} className="hover:underline">
-                    Cadastre-se
-                  </button>
-                </li>
-              </>
-            )}
-            <li>
-              <button
-                onClick={() => {
-                  if (!userLoggedIn) {
-                    toast.error('Acesse sua conta para visualizar o painel administrativo.');
-                  } else {
-                    toast.success('Bem-vindo ao painel administrativo!');
-                    navigate('/dashboard');
-                  }
-                }}
-                className="text-blue-600 hover:underline"
-              >
-                Painel Administrativo
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </header>
-
       <Card className="max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle>Encurtar Link</CardTitle>

@@ -5,7 +5,6 @@ import { useConnectApi } from '@/hooks/useConnectApi';
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, refreshToken } = useConnectApi();
   const [isLoggedIn, setIsLoggedIn] = useState(!!user);
-
   useEffect(() => {
     setIsLoggedIn(!!user);
   }, [user]);

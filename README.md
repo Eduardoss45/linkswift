@@ -113,6 +113,7 @@ npm run dev
 
 - [ ] Criar um **painel administrativo** para gerenciar links.
 - [ ] Implementar estatísticas de acesso de links e armazenar no **MongoDB**.
+- [ ] Gerar qr code com `http(s)://api.qrserver.com/v1/create-qr-code/?data=[URL-encoded-text]&size=[pixels]x[pixels]`
 
 ## ✅ Melhorias Implementadas
 

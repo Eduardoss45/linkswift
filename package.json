@@ -1,0 +1,24 @@
+{
+  "name": "linkswift",
+  "version": "1.0.0",
+  "description": "Este projeto é um **encurtador de links** que cria URLs curtas com validade automática de **7 dias**. Ele utiliza **Node.js + TypeScript + Express** no backend e **React.js + TypeScript** no frontend.",
+  "homepage": "https://github.com/Eduardoss45/linkswift-react-app#readme",
+  "bugs": {
+    "url": "https://github.com/Eduardoss45/linkswift-react-app/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Eduardoss45/linkswift-react-app.git"
+  },
+  "license": "MIT",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
