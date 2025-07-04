@@ -32,7 +32,7 @@ export const register = async (req: Request, res: Response) => {
       return;
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const verificationCode = crypto.randomBytes(3).toString('hex');
+    const verificationCode = crypto.randomBytes(3).toString('hex').toUpperCase();
     const newUser = new UserModel({
       name,
       email,
@@ -233,4 +233,94 @@ export const logout = async (req: Request, res: Response) => {
   } catch (error) {
     sendErrorResponse(res, 500, 'Erro ao fazer logout.');
   }
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  if (!email) {
+    sendErrorResponse(res, 400, 'Email é obrigatório.');
+    return;
+  }
+
+  try {
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      sendErrorResponse(res, 404, 'Usuário não encontrado.');
+      return;
+    }
+
+    const token = crypto
+      .createHash('sha256')
+      .update(`${user._id}${Date.now()}${crypto.randomBytes(20).toString('hex')}`)
+      .digest('hex');
+
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
+    await user.save();
+    const resetLink = `${process.env.BASE_URL_FRONTEND}${process.env.RESET_PASS}${token}`;
+    const htmlContent = `
+  <p>Olá, ${user.name}!</p>
+  <p>Para redefinir sua senha, clique no link abaixo:</p>
+  <p><a href="${resetLink}">LinkSwift - Redefinir Senha</a></p>
+  <p>Se você não solicitou essa alteração, ignore este e-mail.</p>
+`;
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[Reset Link]: ${resetLink}`);
+    }
+
+    await enviarEmail(email, 'Redefinição de senha - Link de acesso', htmlContent, {
+      isHtml: true,
+    });
+
+    sendSuccessResponse(res, 200, 'Redefinição de senha solicitada com sucesso.');
+    return;
+  } catch (error) {
+    console.error(error);
+    sendErrorResponse(res, 500, 'Erro interno do servidor.');
+    return;
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { tk } = req.params;
+  const { newPassword, confirmNewPassword } = req.body;
+
+  console.log(tk, newPassword, confirmNewPassword);
+
+  if (!tk || !newPassword || !confirmNewPassword) {
+    sendErrorResponse(res, 400, 'Todos os campos são obrigatórios.');
+    return;
+  }
+
+  if (newPassword !== confirmNewPassword) {
+    sendErrorResponse(res, 400, 'As senhas não coincidem.');
+    return;
+  }
+
+  const user = await UserModel.findOne({
+    resetPasswordToken: tk,
+    resetPasswordExpires: { $gt: new Date() },
+  });
+
+  if (!user) {
+    throw new Error('Token inválido ou expirado');
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  user.password = hashedPassword;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+
+  await user.save();
+  await enviarEmail(
+    user.email,
+    'Senha redefinida com sucesso',
+    `Olá, ${user.name}, sua senha foi alterada com sucesso.`
+  );
+
+  sendSuccessResponse(res, 200, 'Senha redefinida com sucesso.');
 };

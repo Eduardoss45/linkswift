@@ -1,5 +1,4 @@
-// TODO: Verificar se o funcionamento não foi comprometido.
-import { RegisterData, LoginData, ApiResponse, ErrorResponse, User } from '../interfaces/Response';
+import { RegisterData, LoginData, ApiResponse, ErrorResponse } from '../interfaces/Response';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
@@ -74,11 +73,12 @@ export const useConnectApi = () => {
         codigo,
         email,
       });
+      console.log(res);
       setResponse(res.data);
-      return res.data; // <-- retorne a resposta aqui
+      return res.data;
     } catch (error) {
       handleApiError(error);
-      throw error; // rethrow para o componente tratar
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -176,6 +176,54 @@ export const useConnectApi = () => {
     }
   }, []);
 
+  const forgotPasswordRequest = useCallback(async (email: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.post<ApiResponse>(
+        import.meta.env.VITE_ROTA_SOLICITAR_TROCA_SENHA,
+        { email: email },
+        {
+          withCredentials: true,
+        }
+      );
+      setResponse(res.data);
+    } catch (error) {
+      handleApiError(error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const resetPasswordRequest = useCallback(
+    async (token: string, newPassword: string, confirmNewPassword: string) => {
+      setLoading(true);
+      setError(null);
+      console.log(token, newPassword, confirmNewPassword);
+      try {
+        const res = await api.post<ApiResponse>(
+          `${import.meta.env.VITE_ROTA_TROCAR_SENHA}/${token}`,
+          {
+            newPassword: newPassword,
+            confirmNewPassword: confirmNewPassword,
+          },
+          {
+            withCredentials: true,
+          }
+        );
+        console.log(res);
+        setResponse(res.data);
+        return res.data;
+      } catch (error) {
+        handleApiError(error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
   const reset = () => {
     setError(null);
     setResponse(null);
@@ -200,6 +248,8 @@ export const useConnectApi = () => {
     logoutUser,
     refreshToken,
     resendVerifyEmailCode,
+    forgotPasswordRequest,
+    resetPasswordRequest,
     loading,
     error,
     response,

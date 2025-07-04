@@ -30,4 +30,6 @@ export interface UserDocument extends Document {
   createdAt: Date;
   verificado: boolean;
   verificationCode?: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpires?: Date | null;
 }

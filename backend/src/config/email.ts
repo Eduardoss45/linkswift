@@ -17,14 +17,20 @@ const transporter = nodemailer.createTransport({
  * @param text - Corpo do e-mail
  */
 
-export async function enviarEmail(to: string, subject: string, text: string): Promise<void> {
+export async function enviarEmail(
+  to: string,
+  subject: string,
+  content: string,
+  options?: { isHtml?: boolean }
+): Promise<void> {
   try {
     const info = await transporter.sendMail({
       from: `"LinkSwift" <${process.env.USERAPP}>`,
       to,
       subject,
-      text,
+      ...(options?.isHtml ? { html: content } : { text: content }),
     });
+
     console.log('E-mail enviado:', info.messageId);
   } catch (error) {
     console.error('Erro ao enviar e-mail:', error);

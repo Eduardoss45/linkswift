@@ -3,17 +3,21 @@ import Navbar from './components/layouts/Navbar';
 
 function App() {
   const location = useLocation();
-  const Routes = [
+  const noNavbarRoutes = [
     '/login',
     '/register',
     '/verify-email',
     '/send-new-verify-code',
     '/forgot-password',
-  ].includes(location.pathname);
+    '/check-email',
+  ];
+
+  const hideNavbar =
+    noNavbarRoutes.includes(location.pathname) || location.pathname.startsWith('/reset-password');
 
   return (
     <div>
-      {!Routes ? <Navbar /> : <></>}
+      {!hideNavbar && <Navbar />}
       <Outlet />
     </div>
   );

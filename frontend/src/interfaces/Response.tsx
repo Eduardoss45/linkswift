@@ -33,7 +33,7 @@ export interface User {
   name: string;
   email: string;
   links: string[];
-  verificado: boolean;
+  verified: boolean;
   createdAt: string;
   verificationCode?: string;
 }

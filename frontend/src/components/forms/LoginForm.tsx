@@ -1,7 +1,8 @@
 import { useConnectApi } from '@/hooks/useConnectApi.ts';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '@/contexts/authContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -12,6 +13,11 @@ const LoginForm = () => {
   });
   const { loginUser, loading, error, response } = useConnectApi();
   const navigate = useNavigate();
+  const context = useContext(AuthContext)!;
+  if (!context) {
+    return <p>Erro: usuário não autenticado.</p>;
+  }
+  const { user } = context;
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
@@ -32,16 +38,22 @@ const LoginForm = () => {
   };
 
   useEffect(() => {
-    if (response) {
+    if (response && user) {
       toast.success(response.message || 'Login realizado com sucesso!');
       setTimeout(() => {
-        navigate('/verify-email');
+        if (user.verified === true) {
+          navigate('/dashboard');
+        } else {
+          navigate('/verify-email');
+        }
       }, 3000);
     }
+
     if (error) {
       toast.error(error.message || 'Erro ao realizar login.');
     }
-  }, [response, error, navigate]);
+  }, [response, error, user, navigate]);
+
   return (
     <form onSubmit={handleSubmit}>
       <div className="mt-10 pb-3">

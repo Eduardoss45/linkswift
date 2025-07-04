@@ -10,6 +10,11 @@ const UserSchema = new Schema<UserDocument>({
   createdAt: { type: Date, default: Date.now },
   verificado: { type: Boolean, default: false },
   verificationCode: { type: String },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: {
+    type: Date,
+    default: () => new Date(Date.now() + 15 * 60 * 1000),
+  },
 });
 
 export default model<UserDocument>('User', UserSchema);

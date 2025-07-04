@@ -10,7 +10,7 @@ const ForgotPasswordForm = () => {
     email: '',
   });
 
-  const { verifyEmail, loading, error, response } = useConnectApi();
+  const { forgotPasswordRequest, loading, error, response } = useConnectApi();
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,40 +20,36 @@ const ForgotPasswordForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await verifyEmail(formData.codigo, formData.email);
+      await forgotPasswordRequest(formData.email);
+      console.log('Enviar email de redefinição para:', formData.email);
     } catch (err) {
-      if (err instanceof Error) {
-        toast.error(err.message || 'Erro ao realizar verificação.');
-      } else if (typeof err === 'object' && err !== null && 'message' in err) {
-        const typedError = err as { message: string };
-        toast.error(typedError.message || 'Erro ao realizar verificação.');
-      } else {
-        toast.error('Erro desconhecido.');
-      }
+      toast.error('Erro ao enviar e-mail de redefinição.');
     }
   };
 
   useEffect(() => {
     if (response) {
-      toast.success(response.message || 'Login realizado com sucesso!');
+      toast.success(response.message || 'Verifique sua caixa de entrada para redefinir sua senha.');
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/check-email');
       }, 3000);
     }
+
     if (error) {
-      toast.error(error.message || 'Erro ao realizar verificação.');
+      toast.error(error.message || 'Erro ao enviar e-mail de redefinição.');
     }
   }, [response, error, navigate]);
+
   return (
     <form onSubmit={handleSubmit}>
       <div className="mt-10 pb-3">
-        <h1 className="text-4xl font-bold pb-6">Reenviar código de verificação</h1>
+        <h1 className="text-4xl font-bold pb-6">Redefinir senha</h1>
         <p className="text-zinc-400 text-sm">
-          Não recebeu o código? Informe seu e-mail e enviaremos um novo para ativar sua conta.
+          Informe seu e-mail e enviaremos um link para redefinir sua senha.
         </p>
       </div>
 
-      <div className="mt-10 pb-3">
+      <div className="mt-6 pb-3">
         <Label className="mb-2 block" htmlFor="email">
           E-mail
         </Label>
@@ -70,7 +66,7 @@ const ForgotPasswordForm = () => {
       <div className="pb-3">
         <Input
           type="submit"
-          value={loading ? 'Enviando...' : 'Enviar'}
+          value={loading ? 'Enviando...' : 'Enviar link'}
           className="cursor-pointer disabled:opacity-50"
           disabled={loading}
         />

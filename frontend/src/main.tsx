@@ -4,7 +4,9 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthProvider.tsx';
 import LoginForm from './components/forms/LoginForm.tsx';
 import SendNewVerifyEmailForm from './components/forms/SendNewVerifyEmailForm.tsx';
+import ResetPasswordForm from './components/forms/ResetPasswordForm.tsx';
 import ForgotPasswordForm from './components/forms/ForgotPasswordForm.tsx';
+import CheckEmail from './pages/CheckEmail.tsx';
 import RenderForms from './pages/RenderForms.tsx';
 import { createRoot } from 'react-dom/client';
 import Dashboard from './pages/DashBoard.tsx';
@@ -27,7 +29,9 @@ createRoot(document.getElementById('root')!).render(
               <Route path="register" element={<RegisterForm />} />
               <Route path="send-new-verify-code" element={<SendNewVerifyEmailForm />} />
               <Route path="forgot-password" element={<ForgotPasswordForm />} />
+              <Route path="reset-password/:tk" element={<ResetPasswordForm />} />
             </Route>
+            <Route path="/check-email" element={<CheckEmail />} />
           </Route>
         </Routes>
       </AuthProvider>
