@@ -1,4 +1,4 @@
-import { RegisterData, LoginData, ApiResponse, ErrorResponse } from '../interfaces/Response';
+import { RegisterData, LoginData, ApiResponse, ErrorResponse } from '../interfaces';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
@@ -65,7 +65,7 @@ export const useConnectApi = () => {
     }
   }, []);
 
-  const verifyEmail = useCallback(async (codigo: string, email: string) => {
+  const verifyEmail = useCallback(async (codigo?: string, email?: string) => {
     setLoading(true);
     setError(null);
     try {
@@ -137,9 +137,13 @@ export const useConnectApi = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.post<ApiResponse>(import.meta.env.VITE_ROTA_REFRESH_TOKEN, null, {
-        withCredentials: true,
-      });
+      const res = await api.post<ApiResponse>(
+        import.meta.env.VITE_ROTA_REFRESH_TOKEN,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
       const { token, user } = res.data || {};
       if (token && user) {
         localStorage.setItem('jwt_token', token);

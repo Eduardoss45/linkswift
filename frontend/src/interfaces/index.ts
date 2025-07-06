@@ -1,5 +1,5 @@
 export interface RegisterData {
-  name: string;
+  nome: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -14,14 +14,14 @@ export interface ApiResponse {
   success: boolean;
   message?: string;
   token?: string;
-  user?: { id: string; name: string; email: string };
+  user?: { id: string; nome: string; email: string };
 }
 
 export interface ApiResponse {
   success: boolean;
   message?: string;
   token?: string;
-  user?: { id: string; name: string; email: string };
+  user?: { id: string; nome: string; email: string };
 }
 
 export interface ErrorResponse {
@@ -30,10 +30,20 @@ export interface ErrorResponse {
 
 export interface User {
   _id: string;
-  name: string;
+  nome: string;
   email: string;
   links: string[];
-  verified: boolean;
+  verificado: boolean;
   createdAt: string;
   verificationCode?: string;
+}
+
+export interface AuthContextType {
+  user: {
+    id: string;
+    email: string;
+    nome: string;
+    verificado: boolean;
+    logado: boolean;
+  };
 }

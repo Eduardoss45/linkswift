@@ -12,7 +12,7 @@ const redis = await redisClient();
 
 // * encurta salva links
 export async function shortenLinks(req: Request, res: Response): Promise<void> {
-  const { url, password, name, exclusive } = req.body;
+  const { url, password, nome, exclusive } = req.body;
   const _id = typeof req.user?._id === 'object' ? req.user._id.toString() : null;
   if (!url || !checkUrl(url)) {
     return sendErrorResponse(res, 400, 'URL inválida ou não fornecida');
@@ -25,7 +25,7 @@ export async function shortenLinks(req: Request, res: Response): Promise<void> {
       _id,
       exclusive,
       password,
-      name,
+      nome,
     });
     await redis.set(`short:${id}`, JSON.stringify(linkData), { EX: 60 * 60 * 24 * 7 });
     if (_id) {
@@ -123,7 +123,7 @@ export async function listAllLinks(req: Request, res: Response): Promise<void> {
 // * atualiza um link do usuário
 export async function updateLinks(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
-  const { url, name, password, exclusive } = req.body;
+  const { url, nome, password, exclusive } = req.body;
   const linkDataStr = await redis.get(`short:${id}`);
   if (!linkDataStr) {
     return sendErrorResponse(res, 404, 'Link não encontrado');
@@ -137,7 +137,7 @@ export async function updateLinks(req: Request, res: Response): Promise<void> {
     return sendErrorResponse(res, 400, 'Links exclusivos não podem ter senha');
   }
   if (typeof url === 'string' && url.trim() !== '') linkData.url = url.trim();
-  if (typeof name === 'string') linkData.name = name.trim();
+  if (typeof nome === 'string') linkData.nome = nome.trim();
   if (exclusive !== undefined) linkData.exclusive = isExclusive;
   if (password !== undefined) {
     linkData.password = typeof password === 'string' ? password.trim() : linkData.password || '';

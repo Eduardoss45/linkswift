@@ -1,18 +1,15 @@
-import bcrypt from "bcrypt";
-import crypto from "crypto";
-import jwt from "jsonwebtoken";
-import { Request, Response } from "express";
-import { createClient } from "redis";
-import { LinkData } from "../types/types";
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+import { Request, Response } from 'express';
+import { createClient } from 'redis';
+import { LinkData } from '../types/types';
 
 export async function hashPassword(plainText: string): Promise<string> {
   return await bcrypt.hash(plainText, 12);
 }
 
-export async function comparePassword(
-  plainText: string,
-  hashed: string
-): Promise<boolean> {
+export async function comparePassword(plainText: string, hashed: string): Promise<boolean> {
   return await bcrypt.compare(plainText, hashed);
 }
 
@@ -26,13 +23,13 @@ export function checkUrl(url: string): boolean {
 }
 
 export function generateId(): string {
-  return crypto.randomBytes(3).toString("hex");
+  return crypto.randomBytes(3).toString('hex');
 }
 
 export const decodeJWT = (req: Request): string | null => {
-  const authHeader = req.headers["authorization"];
-  if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
-    const token = authHeader.split(" ")[1];
+  const authHeader = req.headers['authorization'];
+  if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
         userId: string;
@@ -68,11 +65,11 @@ export function sendSuccessResponse<T>(
 
 export async function redisClient() {
   const redis = createClient({
-    url: process.env.REDIS_URL || "redis://127.0.0.1:6379",
+    url: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
     socket: { connectTimeout: 5000, reconnectStrategy: 3 },
   });
-  redis.on("error", (err) => {
-    console.error("Erro ao conectar ao Redis:", err);
+  redis.on('error', err => {
+    console.error('Erro ao conectar ao Redis:', err);
   });
   await redis.connect();
   return redis;
@@ -83,19 +80,19 @@ export async function createHashedLinkData({
   _id = null,
   exclusive = false,
   password = null,
-  name = null,
+  nome = null,
 }: {
   url: string;
   _id?: string | null;
   exclusive?: boolean;
   password?: string | null;
-  name?: string | null,
+  nome?: string | null;
 }): Promise<LinkData> {
-  if ((exclusive || name) && !_id) {
-    throw new Error("Links exclusivos ou nomeados requerem autenticação.");
+  if ((exclusive || nome) && !_id) {
+    throw new Error('Links exclusivos ou nomeados requerem autenticação.');
   }
   if (exclusive && password) {
-    throw new Error("Link exclusivo não pode ter senha.");
+    throw new Error('Link exclusivo não pode ter senha.');
   }
   let hashedPassword: string | null = null;
   if (password !== null && password !== undefined) {
@@ -111,6 +108,6 @@ export async function createHashedLinkData({
     _id,
     exclusive,
     password: hashedPassword,
-    name,
+    nome,
   };
 }

@@ -4,9 +4,9 @@ import { Label } from '@/components/ui/label';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
-import { AuthContext } from '@/contexts/authContext';
+import { AuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { ApiResponse } from '@/interfaces/Response';
+import { ApiResponse } from '@/interfaces';
 
 const VerifyEmailForm = () => {
   const [formData, setFormData] = useState({

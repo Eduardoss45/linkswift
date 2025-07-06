@@ -1,36 +1,32 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useConnectApi } from '@/hooks/useConnectApi.ts';
-import { User } from '@/interfaces/Response';
+import { AuthContextType } from '@/interfaces';
 
-interface AuthContextType {
-  user: User | null;
-  isLoggedIn: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, refreshToken } = useConnectApi();
-  const [isLoggedIn, setIsLoggedIn] = useState(!!user);
+  const [logado, setLogado] = useState(!!user);
 
   useEffect(() => {
-    setIsLoggedIn(!!user);
+    setLogado(!!user);
   }, [user]);
 
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!logado) return;
 
     const interval = setInterval(() => {
       refreshToken();
     }, 14 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [isLoggedIn, refreshToken]);
+  }, [logado, refreshToken]);
 
-  return <AuthContext.Provider value={{ user, isLoggedIn }}>{children}</AuthContext.Provider>;
+  const accountStatus = user ? { ...user, logado } : null;
+  console.log(accountStatus);
+  return <AuthContext.Provider value={{ user: accountStatus }}>{children}</AuthContext.Provider>;
 };
 
-// Aqui é importante garantir que o contexto não seja null quando usado
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

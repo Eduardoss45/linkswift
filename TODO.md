@@ -24,19 +24,5 @@ https://pt.aliexpress.com/item/1005002308952741.html?src=google&pdp_npi=4%40dis!
 ## 🔮 Funcionalidades em Desenvolvimento
 
 - [ ] Personalizar link curto manualmente (`customAlias`)
-- [x] Definir senha para acesso ao link
-- [ ] Estipular datas de validade (início/fim)
-- [ ] Gerar código QR (QRCode) para o link encurtado
-- [x] Implementar autenticação via email
-- [x] Implementar remoção automatica de chave de links do modelo usuário em conjunto com o redis
-- [ ] Implementar sistemas de remoção de tokens de redefinição de senha e sistema de reenvio de codigo de verificação no backend
-- [ ] Revisar logica dos formularios e mensagens
-- [ ] Incluir contexto na verificação de codigo com o email logado anteriormente
-- [ ] No backend, mesmo com verificação no frontend, nunca confie só no frontend.
-      Proteja rotas sensíveis no backend com algo assim:
-
-```js
-if (!user.verificado) {
-  return res.status(403).json({ message: 'Conta não verificada.' });
-}
-```
+- [ ] Estipular datas de validade para links (início/fim)
+- [ ] Gerar código QR (QRCode) para o links

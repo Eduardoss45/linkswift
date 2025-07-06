@@ -10,7 +10,7 @@ const SendNewVerifyEmailForm = () => {
     email: '',
   });
 
-  const { verifyEmail, loading, error, response } = useConnectApi(); // ! Ajustar o hook para a nova operação (Enviar novo codigo para verificação de email)
+  const { verifyEmail, loading, error, response } = useConnectApi();
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,7 +20,7 @@ const SendNewVerifyEmailForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await verifyEmail(formData.email); // ! Ajustar aqui para receber apenas o email
+      await verifyEmail(formData.email);
     } catch (err) {
       if (err instanceof Error) {
         toast.error(err.message || 'Erro ao realizar reenvio de código para verificação.');

@@ -6,7 +6,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const ResetPasswordForm = () => {
-  const { tk } = useParams();
+  const { token } = useParams();
   const navigate = useNavigate();
   const { resetPasswordRequest, loading } = useConnectApi(); // removido error e response
 
@@ -27,13 +27,17 @@ const ResetPasswordForm = () => {
       return;
     }
 
-    if (!tk) {
+    if (!token) {
       toast.error('Token inválido ou ausente.');
       return;
     }
 
     try {
-      const response = await resetPasswordRequest(tk, formData.password, formData.confirmPassword);
+      const response = await resetPasswordRequest(
+        token,
+        formData.password,
+        formData.confirmPassword
+      );
       toast.success(response?.message || 'Senha redefinida com sucesso!');
       setTimeout(() => navigate('/login'), 3000);
     } catch (err: any) {

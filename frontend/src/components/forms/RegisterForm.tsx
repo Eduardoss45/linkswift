@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 
 const RegisterForm = () => {
   const [formData, setFormData] = useState({
-    name: '',
+    nome: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -61,14 +61,14 @@ const RegisterForm = () => {
       </div>
 
       <div className="mt-6 pb-3">
-        <Label className="mb-2 block" htmlFor="name">
+        <Label className="mb-2 block" htmlFor="nome">
           Nome
         </Label>
         <Input
           type="text"
-          id="name"
+          id="nome"
           placeholder="Digite seu nome"
-          value={formData.name}
+          value={formData.nome}
           onChange={handleChange}
           required
         />

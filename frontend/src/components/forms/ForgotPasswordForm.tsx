@@ -21,7 +21,6 @@ const ForgotPasswordForm = () => {
     e.preventDefault();
     try {
       await forgotPasswordRequest(formData.email);
-      console.log('Enviar email de redefinição para:', formData.email);
     } catch (err) {
       toast.error('Erro ao enviar e-mail de redefinição.');
     }

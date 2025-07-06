@@ -11,14 +11,14 @@ if (!process.env.JWT_SECRET || !process.env.REFRESH_SECRET) {
   throw new Error('Segredos JWT não definidos no .env');
 }
 
-// * Registro
+// * Registrar usuário
 export const register = async (req: Request, res: Response) => {
-  const { name, email, password, confirmPassword } = req.body;
-  if (!name || !email || !password || !confirmPassword) {
+  const { nome, email, password, confirmPassword } = req.body;
+  if (!nome || !email || !password || !confirmPassword) {
     sendErrorResponse(
       res,
       400,
-      'Verifique se os campos name, email, password e confirmPassword foram preenchidos.'
+      'Verifique se os campos nome, email, password e confirmPassword foram preenchidos.'
     );
     return;
   } else if (password !== confirmPassword) {
@@ -34,7 +34,7 @@ export const register = async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const verificationCode = crypto.randomBytes(3).toString('hex').toUpperCase();
     const newUser = new UserModel({
-      name,
+      nome,
       email,
       password: hashedPassword,
       verificado: false,
@@ -44,7 +44,7 @@ export const register = async (req: Request, res: Response) => {
     await enviarEmail(
       email,
       'Verifique seu e-mail',
-      `Olá, ${name}!\n\nSeu código de verificação é: ${verificationCode}`
+      `Olá, ${nome}!\n\nSeu código de verificação é: ${verificationCode}`
     );
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -56,7 +56,7 @@ export const register = async (req: Request, res: Response) => {
       user: {
         id: newUser._id,
         email: newUser.email,
-        name: newUser.name,
+        nome: newUser.nome,
       },
     });
   } catch (error) {
@@ -92,7 +92,7 @@ export const verificarCodigo = async (req: Request, res: Response) => {
   }
 };
 
-// * Reenviar codigo
+// * Reenviar código de verificação
 export const reenviarCodigo = async (req: Request, res: Response) => {
   const { email } = req.body;
 
@@ -116,7 +116,7 @@ export const reenviarCodigo = async (req: Request, res: Response) => {
     await enviarEmail(
       email,
       'Verifique seu e-mail',
-      `Olá, ${user.name}!\n\nSeu novo código de verificação é: ${verificationCode}`
+      `Olá, ${user.nome}!\n\nSeu novo código de verificação é: ${verificationCode}`
     );
     sendSuccessResponse(res, 200, 'Código de verificação reenviado com sucesso.');
     return;
@@ -163,8 +163,8 @@ export const login = async (req: Request, res: Response) => {
       user: {
         id: user._id,
         email: user.email,
-        name: user.name,
-        verified: user.verificado,
+        nome: user.nome,
+        verificado: user.verificado,
       },
     });
   } catch (error) {
@@ -172,7 +172,7 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-// * RefresToken
+// * Atualizar token
 export const refreshToken = async (req: Request, res: Response) => {
   const refreshToken = req.cookies.refreshToken;
   if (!refreshToken) {
@@ -197,12 +197,12 @@ export const refreshToken = async (req: Request, res: Response) => {
       user: {
         id: user._id,
         email: user.email,
-        name: user.name,
-        verified: user.verificado,
+        nome: user.nome,
+        verificado: user.verificado,
       },
     });
   } catch (error: any) {
-    if (error.name === 'TokenExpiredError') {
+    if (error.nome === 'TokenExpiredError') {
       return sendErrorResponse(res, 403, 'Token expirado.');
     }
     return sendErrorResponse(res, 403, 'Token inválido.');
@@ -235,6 +235,7 @@ export const logout = async (req: Request, res: Response) => {
   }
 };
 
+// * Esqueci a senha
 export const forgotPassword = async (req: Request, res: Response) => {
   const { email } = req.body;
 
@@ -261,7 +262,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     await user.save();
     const resetLink = `${process.env.BASE_URL_FRONTEND}${process.env.RESET_PASS}${token}`;
     const htmlContent = `
-  <p>Olá, ${user.name}!</p>
+  <p>Olá, ${user.nome}!</p>
   <p>Para redefinir sua senha, clique no link abaixo:</p>
   <p><a href="${resetLink}">LinkSwift - Redefinir Senha</a></p>
   <p>Se você não solicitou essa alteração, ignore este e-mail.</p>
@@ -284,13 +285,12 @@ export const forgotPassword = async (req: Request, res: Response) => {
   }
 };
 
+// * Redefinir senha
 export const resetPassword = async (req: Request, res: Response) => {
-  const { tk } = req.params;
+  const { token } = req.params;
   const { newPassword, confirmNewPassword } = req.body;
 
-  console.log(tk, newPassword, confirmNewPassword);
-
-  if (!tk || !newPassword || !confirmNewPassword) {
+  if (!token || !newPassword || !confirmNewPassword) {
     sendErrorResponse(res, 400, 'Todos os campos são obrigatórios.');
     return;
   }
@@ -301,7 +301,7 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 
   const user = await UserModel.findOne({
-    resetPasswordToken: tk,
+    resetPasswordToken: token,
     resetPasswordExpires: { $gt: new Date() },
   });
 
@@ -319,7 +319,7 @@ export const resetPassword = async (req: Request, res: Response) => {
   await enviarEmail(
     user.email,
     'Senha redefinida com sucesso',
-    `Olá, ${user.name}, sua senha foi alterada com sucesso.`
+    `Olá, ${user.nome}, sua senha foi alterada com sucesso.`
   );
 
   sendSuccessResponse(res, 200, 'Senha redefinida com sucesso.');

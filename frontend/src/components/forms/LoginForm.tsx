@@ -2,7 +2,7 @@ import { useConnectApi } from '@/hooks/useConnectApi.ts';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState, useEffect, useContext } from 'react';
-import { AuthContext } from '@/contexts/authContext';
+import { AuthContext } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -41,7 +41,7 @@ const LoginForm = () => {
     if (response && user) {
       toast.success(response.message || 'Login realizado com sucesso!');
       setTimeout(() => {
-        if (user.verified === true) {
+        if (user.verificado === true) {
           navigate('/dashboard');
         } else {
           navigate('/verify-email');

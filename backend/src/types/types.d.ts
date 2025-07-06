@@ -17,12 +17,12 @@ export interface LinkData {
   url: string; // * URL de destino
   exclusive?: boolean; // * Acesso apenas do criador
   password: string | null; // * Senha criptografada
-  name?: string | null; // * Nome do link (opcional)
+  nome?: string | null; // * Nome do link (opcional)
 }
 
 export interface UserDocument extends Document {
   _id: Types.ObjectId;
-  name: string;
+  nome: string;
   email: string;
   password: string;
   links: string[];
