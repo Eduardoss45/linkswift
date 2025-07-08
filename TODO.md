@@ -26,3 +26,62 @@ https://pt.aliexpress.com/item/1005002308952741.html?src=google&pdp_npi=4%40dis!
 - [ ] Personalizar link curto manualmente (`customAlias`)
 - [ ] Estipular datas de validade para links (início/fim)
 - [ ] Gerar código QR (QRCode) para o links
+
+---
+
+## Como implementar essa "isca" de forma eficiente
+
+### 1. Mostrar um toast (notificação rápida) após encurtar o link com sucesso
+
+- Exemplo:
+
+  > **Link encurtado com sucesso!** Para funcionalidades extras, [acesse sua conta](#).
+
+### 2. Link clicável na notificação que leva à tela de login/cadastro
+
+- Você pode usar o `toast` do `sonner` (já importado no seu projeto) com conteúdo customizado:
+
+```tsx
+import { toast } from 'sonner';
+
+function encurtarLink() {
+  // lógica do encurtador aqui...
+
+  toast(
+    t => (
+      <div>
+        Link encurtado com sucesso!{' '}
+        <button
+          className="underline text-cyan-400"
+          onClick={() => {
+            navigate('/login');
+            toast.dismiss(t.id);
+          }}
+        >
+          Para funcionalidades extras, acesse sua conta clicando aqui!
+        </button>
+      </div>
+    ),
+    { duration: 8000 } // dura 8 segundos, por exemplo
+  );
+}
+```
+
+---
+
+### 3. Dicas para o texto da notificação / isca
+
+- Seja claro e objetivo.
+- Use uma call to action (CTA) curta e fácil de entender.
+- Faça o texto visualmente destacado (cores, sublinhado, cursor pointer).
+- Não exagere para não irritar o usuário.
+
+---
+
+### 4. Outros gatilhos de engajamento para considerar
+
+- **Limite de links encurtados para usuários anônimos**, sugerindo cadastro para mais.
+- **Funcionalidades premium**: estatísticas detalhadas, links personalizados, histórico, etc.
+- **Banner fixo ou modal suave** com convite para criar conta após 1-2 encurtamentos.
+
+- [ ] Ajustar o menu flutuante.

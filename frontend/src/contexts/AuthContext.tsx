@@ -23,7 +23,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [logado, refreshToken]);
 
   const accountStatus = user ? { ...user, logado } : null;
-  console.log(accountStatus);
   return <AuthContext.Provider value={{ user: accountStatus }}>{children}</AuthContext.Provider>;
 };
 

@@ -5,7 +5,7 @@ import Logo from '../assets/logo.png';
 import Form from '../assets/form.svg';
 import { Toaster } from 'sonner';
 
-import './AuthSystem.css';
+import './Pages.css';
 
 const RenderForms = () => {
   return (
