@@ -84,4 +84,4 @@ function encurtarLink() {
 - **Funcionalidades premium**: estatísticas detalhadas, links personalizados, histórico, etc.
 - **Banner fixo ou modal suave** com convite para criar conta após 1-2 encurtamentos.
 
-- [ ] Ajustar o menu flutuante.
+- [ ] Revisar SendNewVerifyEmailForm ln.39

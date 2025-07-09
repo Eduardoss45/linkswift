@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './components/layouts/Navbar';
+import { Toaster } from 'sonner';
 
 function App() {
   const location = useLocation();
@@ -19,6 +20,7 @@ function App() {
     <div>
       {!hideNavbar && <Navbar />}
       <Outlet />
+      <Toaster richColors />;
     </div>
   );
 }

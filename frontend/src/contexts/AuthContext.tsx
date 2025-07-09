@@ -2,11 +2,11 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useConnectApi } from '@/hooks/useConnectApi.ts';
 import { AuthContextType } from '@/interfaces';
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, refreshToken } = useConnectApi();
-  const [logado, setLogado] = useState(!!user);
+  const [logado, setLogado] = useState(false);
 
   useEffect(() => {
     setLogado(!!user);
@@ -14,7 +14,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (!logado) return;
-
     const interval = setInterval(() => {
       refreshToken();
     }, 14 * 60 * 1000);
@@ -22,8 +21,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => clearInterval(interval);
   }, [logado, refreshToken]);
 
-  const accountStatus = user ? { ...user, logado } : null;
-  return <AuthContext.Provider value={{ user: accountStatus }}>{children}</AuthContext.Provider>;
+  const value: AuthContextType = {
+    user: user ? { ...user, logado } : null,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
@@ -33,3 +35,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export { AuthContext };

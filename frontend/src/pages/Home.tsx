@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 
 const Home = () => {
   const [isPrivate, setIsPrivate] = useState(false);
@@ -65,7 +65,6 @@ const Home = () => {
 
   return (
     <div className="p-6 space-y-8 bg-gray-100">
-      <Toaster richColors />
       <Card className="max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle>Encurtar Link</CardTitle>

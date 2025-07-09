@@ -132,3 +132,7 @@ body {
 .bg-cyan-linkswift {
   background-color: #37b6ff;
 }
+
+.btn-menu-flutuante {
+  @apply py-1 px-2 hover:bg-gray-800 rounded cursor-pointer;
+}

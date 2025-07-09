@@ -11,21 +11,14 @@ export interface LoginData {
 }
 
 export interface ApiResponse {
-  success: boolean;
-  message?: string;
-  token?: string;
-  user?: { id: string; nome: string; email: string };
-}
-
-export interface ApiResponse {
-  success: boolean;
+  success?: boolean;
   message?: string;
   token?: string;
   user?: { id: string; nome: string; email: string };
 }
 
 export interface ErrorResponse {
-  message: string;
+  message?: string;
 }
 
 export interface User {

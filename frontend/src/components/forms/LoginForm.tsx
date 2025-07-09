@@ -42,7 +42,7 @@ const LoginForm = () => {
       toast.success(response.message || 'Login realizado com sucesso!');
       setTimeout(() => {
         if (user.verificado === true) {
-          navigate('/dashboard');
+          navigate('/');
         } else {
           navigate('/verify-email');
         }

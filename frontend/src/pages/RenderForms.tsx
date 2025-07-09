@@ -3,7 +3,6 @@ import { Outlet, Link } from 'react-router-dom';
 import { CircleChevronLeft } from 'lucide-react';
 import Logo from '../assets/logo.png';
 import Form from '../assets/form.svg';
-import { Toaster } from 'sonner';
 
 import './Pages.css';
 
@@ -23,7 +22,6 @@ const RenderForms = () => {
         <Outlet />
         <RedirectForms />
       </div>
-      <Toaster />
     </div>
   );
 };

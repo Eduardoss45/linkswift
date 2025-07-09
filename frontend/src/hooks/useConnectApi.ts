@@ -98,7 +98,7 @@ export const useConnectApi = () => {
           setResponse(res.data);
           scheduleRefresh(token);
         } else {
-          setError({ message: res.data?.message || 'Erro ao fazer login' });
+          setError({ message: res.data?.message });
         }
       } catch (error) {
         handleApiError(error);
@@ -113,16 +113,17 @@ export const useConnectApi = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('jwt_token');
-      if (token) {
-        await api.post<ApiResponse>(import.meta.env.VITE_ROTA_LOGOUT, null, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      }
+      const res = await api.post<ApiResponse>(
+        import.meta.env.VITE_ROTA_LOGOUT,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
       localStorage.removeItem('jwt_token');
       localStorage.removeItem('user_data');
       setUser(null);
-      setResponse({ success: true, message: 'Logout realizado com sucesso' });
+      setResponse({ message: res.data?.message });
       if (refreshTimeoutId.current) {
         clearTimeout(refreshTimeoutId.current);
       }
@@ -152,7 +153,7 @@ export const useConnectApi = () => {
         setResponse(res.data);
         scheduleRefresh(token);
       } else {
-        setError({ message: res.data?.message || 'Erro ao atualizar token' });
+        setError({ message: res.data?.message });
       }
     } catch (error) {
       handleApiError(error);

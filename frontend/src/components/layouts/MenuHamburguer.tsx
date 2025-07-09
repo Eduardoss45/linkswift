@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { Toaster } from 'sonner';
+import { toast } from 'sonner';
+import { useConnectApi } from '@/hooks/useConnectApi';
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,6 +11,7 @@ const MenuHamburguer = () => {
   const [menuFlutuante, setMenuFlutuante] = useState(false);
   const [exibindo, setExibindo] = useState(false);
   const navigate = useNavigate();
+  const { logoutUser, error, response } = useConnectApi();
 
   const menuRef = useRef<HTMLDivElement>(null);
   const botaoRef = useRef<HTMLButtonElement>(null);
@@ -27,7 +29,19 @@ const MenuHamburguer = () => {
     setMenuFlutuante(prev => !prev);
   };
 
-  // Fecha o menu ao clicar fora
+  const logout = async () => {
+    try {
+      await logoutUser();
+      setMenuFlutuante(false);
+      toast.success(response?.message || 'Logout realizado com sucesso.');
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
+    } catch (err) {
+      toast.error(error?.message || 'Erro ao sair. Tente novamente mais tarde.');
+    }
+  };
+
   useEffect(() => {
     const handleClickFora = (event: MouseEvent) => {
       if (
@@ -76,61 +90,34 @@ const MenuHamburguer = () => {
           >
             {exibindo ? (
               <>
-                <div
-                  className="py-1 px-2 hover:bg-gray-800 rounded cursor-pointer"
-                  onClick={() => navigate('/login')}
-                >
+                <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
                   Perfil
                 </div>
-                <div
-                  className="py-1 px-2 hover:bg-gray-800 rounded cursor-pointer"
-                  onClick={() => navigate('/login')}
-                >
+                <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
                   Meus Links
                 </div>
-                <div
-                  className="py-1 px-2 hover:bg-gray-800 rounded cursor-pointer"
-                  onClick={() => navigate('/login')}
-                >
+                <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
                   Criar Novo Link
                 </div>
-                <div
-                  className="py-1 px-2 hover:bg-gray-800 rounded cursor-pointer"
-                  onClick={() => navigate('/login')}
-                >
+                <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
                   Configurações
                 </div>
-                <div
-                  className="py-1 px-2 hover:bg-gray-800 rounded cursor-pointer"
-                  onClick={() => navigate('/login')}
-                >
+                <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
                   Relatórios
                 </div>
-                <div
-                  className="py-1 px-2 hover:bg-gray-800 rounded cursor-pointer"
-                  onClick={() => navigate('/login')}
-                >
+                <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
                   Ajuda
                 </div>
-                <div
-                  className="py-1 px-2 hover:bg-gray-800 rounded cursor-pointer"
-                  onClick={() => navigate('/login')}
-                >
+                <div className="btn-menu-flutuante" onClick={() => logout()}>
                   Sair
                 </div>
               </>
             ) : (
               <>
-                <div
-                  className="py-1 px-2 hover:bg-gray-800 rounded cursor-pointer"
-                  onClick={() => navigate('/login')}
-                >
+                <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
                   Login
                 </div>
-                <div
-                  className="py-1 px-2 hover:bg-gray-800 rounded cursor-pointer"
-                  onClick={() => navigate('/login')}
-                >
+                <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
                   Cadastre-se
                 </div>
               </>
@@ -138,8 +125,6 @@ const MenuHamburguer = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <Toaster richColors />
     </>
   );
 };

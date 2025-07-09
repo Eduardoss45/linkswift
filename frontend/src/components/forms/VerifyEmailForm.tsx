@@ -64,7 +64,7 @@ const VerifyEmailForm = () => {
     if (verifyResponse) {
       toast.success(verifyResponse.message || 'Verificação realizada com sucesso!');
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/');
       }, 3000);
     }
   }, [verifyResponse, navigate]);
