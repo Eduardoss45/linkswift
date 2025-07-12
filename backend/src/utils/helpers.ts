@@ -1,8 +1,8 @@
 import bcrypt from 'bcrypt';
+import Redis, { Redis as RedisClient } from 'ioredis';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
-import { createClient } from 'redis';
 import { LinkData } from '../types/types';
 
 export async function hashPassword(plainText: string): Promise<string> {
@@ -22,7 +22,7 @@ export function checkUrl(url: string): boolean {
   }
 }
 
-export function generateId(): string {
+export function generateKey(): string {
   return crypto.randomBytes(3).toString('hex');
 }
 
@@ -63,51 +63,21 @@ export function sendSuccessResponse<T>(
   res.status(statusCode).json(payload ? { message, ...payload } : { message });
 }
 
-export async function redisClient() {
-  const redis = createClient({
-    url: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
-    socket: { connectTimeout: 5000, reconnectStrategy: 3 },
-  });
-  redis.on('error', err => {
-    console.error('Erro ao conectar ao Redis:', err);
-  });
-  await redis.connect();
+let redis: RedisClient | null = null;
+
+export function ioRedisClient(): RedisClient {
+  if (!redis) {
+    redis = new Redis(process.env.REDIS_URL || 'redis://127.0.0.1:6379', {
+      connectTimeout: 5000,
+      retryStrategy(times) {
+        if (times > 3) return null;
+        return Math.min(times * 50, 2000);
+      },
+    });
+
+    redis.on('error', (err: Error) => {
+      console.error('Erro ao conectar ao Redis:', err);
+    });
+  }
   return redis;
-}
-
-export async function createHashedLinkData({
-  url,
-  _id = null,
-  exclusive = false,
-  password = null,
-  nome = null,
-}: {
-  url: string;
-  _id?: string | null;
-  exclusive?: boolean;
-  password?: string | null;
-  nome?: string | null;
-}): Promise<LinkData> {
-  if ((exclusive || nome) && !_id) {
-    throw new Error('Links exclusivos ou nomeados requerem autenticação.');
-  }
-  if (exclusive && password) {
-    throw new Error('Link exclusivo não pode ter senha.');
-  }
-  let hashedPassword: string | null = null;
-  if (password !== null && password !== undefined) {
-    const strPassword = String(password).trim();
-
-    if (strPassword.length === 0) {
-      throw new Error('A senha não pode ser vazia.');
-    }
-    hashedPassword = await hashPassword(strPassword);
-  }
-  return {
-    url,
-    _id,
-    exclusive,
-    password: hashedPassword,
-    nome,
-  };
 }

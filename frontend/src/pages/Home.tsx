@@ -7,15 +7,16 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 
 const Home = () => {
-  const [isPrivate, setIsPrivate] = useState(false);
-  const [userLoggedIn, setUserLoggedIn] = useState(true);
+  const [privado, setPrivado] = useState(false);
+  const [senha, setSenha] = useState(false);
+  const [logado, setLogado] = useState(true);
   const [password, setPassword] = useState('');
   const [linkName, setLinkName] = useState('');
   const [url, setUrl] = useState('');
   const [shortLink, setShortLink] = useState('');
   // const navigate = useNavigate();
 
-  const handleCopy = () => {
+  const copiar = () => {
     if (shortLink) {
       navigator.clipboard.writeText(shortLink);
       toast.success('Link copiado com sucesso!');
@@ -23,14 +24,19 @@ const Home = () => {
   };
 
   const handlePrivateToggle = () => {
-    setIsPrivate(!isPrivate);
-    if (!userLoggedIn) {
+    if (!logado) {
       toast.warning('Faça login para criar links privados.');
+      return;
     }
+    setPrivado(prev => !prev);
+  };
+
+  const handlePasswordToggle = () => {
+    setSenha(prev => !prev);
   };
 
   const handleAdminAccess = () => {
-    if (!userLoggedIn) {
+    if (!logado) {
       toast.error('Acesse sua conta para visualizar o painel administrativo.');
     } else {
       toast.success('Bem-vindo ao painel administrativo!');
@@ -52,10 +58,14 @@ const Home = () => {
       return;
     }
 
-    if (isPrivate && password.length < 5) {
+    if (privado && password.length < 5) {
       toast.error('A senha precisa ter pelo menos 5 caracteres.');
       return;
     }
+
+    const handlePasswordToggle = () => {
+      setSenha(prev => !prev);
+    };
 
     const simulatedShortUrl = `https://linkswift.dev/${Math.random().toString(36).substring(2, 8)}`;
     setShortLink(simulatedShortUrl);
@@ -83,7 +93,7 @@ const Home = () => {
               value={shortLink || ''}
               disabled={!shortLink}
             />
-            <Button onClick={handleCopy} disabled={!shortLink}>
+            <Button onClick={copiar} disabled={!shortLink}>
               Copiar
             </Button>
           </div>
@@ -95,15 +105,15 @@ const Home = () => {
       <Card
         className="max-w-3xl mx-auto opacity-100 transition-all"
         style={{
-          opacity: userLoggedIn ? 1 : 0.5,
-          pointerEvents: userLoggedIn ? 'auto' : 'none',
+          opacity: logado ? 1 : 0.5,
+          pointerEvents: logado ? 'auto' : 'none',
         }}
       >
         <CardHeader>
           <CardTitle>Configurações Extras</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {!userLoggedIn && (
+          {!logado && (
             <div className="text-sm text-red-600">
               ⚠️ Faça login para acessar as configurações extras.
             </div>
@@ -117,13 +127,28 @@ const Home = () => {
               onChange={e => setLinkName(e.target.value)}
             />
           </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="private">Link Privado</Label>
-            <Switch id="private" checked={isPrivate} onCheckedChange={handlePrivateToggle} />
+          <div
+            className={`flex items-center justify-between ${
+              senha ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            <Label htmlFor="private">Privado</Label>
+            <Switch
+              id="private"
+              checked={privado}
+              onCheckedChange={handlePrivateToggle}
+              disabled={senha}
+            />
           </div>
 
-          {isPrivate && (
+          {!privado && (
+            <div className="flex items-center justify-between">
+              <Label htmlFor="senha">Senha</Label>
+              <Switch id="senha" checked={senha} onCheckedChange={handlePasswordToggle} />
+            </div>
+          )}
+
+          {senha && !privado && (
             <div className="space-y-2">
               <Label htmlFor="password">Senha do link</Label>
               <Input
@@ -137,27 +162,6 @@ const Home = () => {
           )}
         </CardContent>
       </Card>
-
-      <footer className="text-center text-sm text-gray-500 py-6">
-        <p>
-          Desenvolvido por{' '}
-          <a
-            href="https://github.com/Eduardoss45"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            Eduardo Souza
-          </a>
-        </p>
-        <p>2025 — Todos os direitos reservados</p>
-        <div className="flex justify-center gap-4 mt-2 flex-wrap">
-          <a href="#">Política de privacidade</a>
-          <a href="#">Termos de uso</a>
-          <a href="#">Contato</a>
-          <a href="#">Sobre</a>
-        </div>
-      </footer>
     </div>
   );
 };

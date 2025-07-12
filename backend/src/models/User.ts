@@ -5,7 +5,7 @@ const UserSchema = new Schema<UserDocument>({
   nome: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  links: [{ type: String }],
+  links: [{ type: Schema.Types.ObjectId, ref: 'Link', default: [] }],
   refreshToken: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
   verificado: { type: Boolean, default: false },

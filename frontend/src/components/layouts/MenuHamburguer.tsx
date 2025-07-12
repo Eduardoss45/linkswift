@@ -91,19 +91,13 @@ const MenuHamburguer = () => {
             {exibindo ? (
               <>
                 <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
-                  Perfil
-                </div>
-                <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
                   Meus Links
-                </div>
-                <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
-                  Criar Novo Link
                 </div>
                 <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
                   Configurações
                 </div>
-                <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
-                  Relatórios
+                <div className="btn-menu-flutuante" onClick={() => navigate('/dashboard')}>
+                  Dashboard
                 </div>
                 <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
                   Ajuda

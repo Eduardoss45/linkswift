@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './components/layouts/Navbar';
+import Footer from './components/layouts/Footer';
 import { Toaster } from 'sonner';
 
 function App() {
@@ -13,14 +14,15 @@ function App() {
     '/check-email',
   ];
 
-  const hideNavbar =
+  const hideLayout =
     noNavbarRoutes.includes(location.pathname) || location.pathname.startsWith('/reset-password');
 
   return (
     <div>
-      {!hideNavbar && <Navbar />}
+      {!hideLayout && <Navbar />}
       <Outlet />
-      <Toaster richColors />;
+      <Toaster richColors />
+      {!hideLayout && <Footer />}
     </div>
   );
 }
