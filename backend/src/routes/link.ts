@@ -5,6 +5,7 @@ import {
   // listAllLinks,
   // updateLinks,
   // deleteLinks,
+  checkLink,
   redirectToLinks,
   helloLinkSwift,
 } from '../controllers/linkController.js';
@@ -18,6 +19,7 @@ import { authenticateToken, optionalAuthenticateToken } from '../middleware/auth
 // * Publica
 router.get('/', helloLinkSwift);
 router.post('/shorten', optionalAuthenticateToken, shortenLinks);
-router.get('/:id', optionalAuthenticateToken, redirectToLinks);
+router.get('/check/:key', optionalAuthenticateToken, checkLink);
+router.post('/:key', optionalAuthenticateToken, redirectToLinks);
 
 export default router;

@@ -5,7 +5,7 @@ import { Toaster } from 'sonner';
 
 function App() {
   const location = useLocation();
-  const noNavbarRoutes = [
+  const noLayout = [
     '/login',
     '/register',
     '/verify-email',
@@ -15,7 +15,7 @@ function App() {
   ];
 
   const hideLayout =
-    noNavbarRoutes.includes(location.pathname) || location.pathname.startsWith('/reset-password');
+    noLayout.includes(location.pathname) || location.pathname.startsWith('/reset-password');
 
   return (
     <div>

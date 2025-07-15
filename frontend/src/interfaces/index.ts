@@ -15,6 +15,8 @@ export interface ApiResponse {
   message?: string;
   token?: string;
   user?: { id: string; nome: string; email: string };
+  url?: string;
+  senhaNecessaria?: boolean;
 }
 
 export interface ErrorResponse {
@@ -39,4 +41,12 @@ export interface AuthContextType {
     verificado: boolean;
     logado: boolean;
   };
+}
+
+export interface ShortenLinkData {
+  url: string;
+  senha: string;
+  nome: string;
+  privado: boolean;
+  expira_em?: string;
 }

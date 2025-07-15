@@ -9,7 +9,7 @@ import {
   sendErrorResponse,
   sendSuccessResponse,
 } from '../utils/helpers.js';
-import { LinkData, RedisLinkData } from '../types/types.js';
+import { LinkData } from '../types/types.js';
 
 const redis = ioRedisClient();
 
@@ -61,7 +61,7 @@ export async function shortenLinks(req: Request, res: Response): Promise<void> {
     if (criado_por) {
       await UserModel.findByIdAndUpdate(criado_por, { $push: { links: newLink._id } });
     }
-    const shortUrl = `${process.env.BASE_URL}/${key}`;
+    const shortUrl = `${process.env.BASE_URL_FRONTEND}/${key}`;
     return sendSuccessResponse(res, 201, 'Link encurtado com sucesso', { url: shortUrl });
   } catch (error) {
     return sendErrorResponse(res, 400, (error as Error).message);
@@ -70,34 +70,46 @@ export async function shortenLinks(req: Request, res: Response): Promise<void> {
 
 // * redireciona e protege links
 export async function redirectToLinks(req: Request, res: Response): Promise<void> {
-  const { id } = req.params;
-  const linkDataStr = await redis.get(`short:${id}`);
-  if (!linkDataStr) {
+  const { key } = req.params;
+  const { senha } = req.body;
+  const link = await redis.get(key);
+
+  if (!link) {
     return sendErrorResponse(res, 404, 'Link não encontrado.');
   }
-  const linkData = JSON.parse(linkDataStr);
-  if (linkData.exclusive) {
-    const userId = req.user?._id?.toString();
-    if (!userId) {
+
+  const linkData = JSON.parse(link);
+
+  if (linkData.privado) {
+    const user = req.user?._id?.toString();
+    if (!user) {
       return sendErrorResponse(res, 401, 'Autenticação necessária.', {
         reason: 'auth_required',
         redirect: '/login',
       });
     }
-    const userOwnsLink = await UserModel.exists({
-      _id: userId,
-      links: id,
-    });
-    if (!userOwnsLink) {
+    const acesso = await UserModel.exists({ _id: user, links: key });
+    if (!acesso) {
       return sendErrorResponse(res, 403, 'Acesso negado ao link exclusivo.');
     }
   }
-  if (linkData.password) {
-    return sendErrorResponse(res, 401, 'Senha necessária para acessar o link.', {
-      reason: 'password_required',
-      redirect: `/password/${id}`,
-    });
+
+  if (linkData.senha) {
+    if (!senha) {
+      return sendErrorResponse(res, 401, 'Senha necessária para acessar o link.', {
+        reason: 'password_required',
+        redirect: `${process.env.BASE_URL_FRONTEND}/password/${key}`,
+      });
+    }
+
+    const senhaValida = await bcrypt.compare(senha, linkData.senha);
+    if (!senhaValida) {
+      return sendErrorResponse(res, 401, 'Senha incorreta.');
+    }
+
+    return sendSuccessResponse(res, 201, 'Link autorizado', { url: linkData.url });
   }
+
   return res.redirect(linkData.url);
 }
 
@@ -190,6 +202,23 @@ export async function redirectToLinks(req: Request, res: Response): Promise<void
 //   await user.save();
 //   return sendSuccessResponse(res, 200, 'Link deletado com sucesso');
 // }
+
+export async function checkLink(req: Request, res: Response): Promise<void> {
+  const { key } = req.params;
+  const link = await redis.get(key);
+
+  if (!link) {
+    return sendErrorResponse(res, 404, 'Link não encontrado.');
+  }
+
+  const linkData = JSON.parse(link);
+
+  return sendSuccessResponse(res, 200, 'Link encontrado', {
+    privado: !!linkData.privado,
+    senhaNecessaria: !!linkData.senha,
+    url: linkData.senha ? null : linkData.url,
+  });
+}
 
 // * status do servidor
 export async function helloLinkSwift(req: Request, res: Response): Promise<void> {

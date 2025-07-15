@@ -9,7 +9,8 @@ import CheckEmail from './pages/CheckEmail.tsx';
 import RenderForms from './pages/RenderForms.tsx';
 import { createRoot } from 'react-dom/client';
 import Dashboard from './pages/DashBoard.tsx';
-import Home from './pages/Home.tsx';
+import ShortLinks from './pages/ShortLinks.tsx';
+import RedirectLinks from './pages/RedirectLinks.tsx';
 import { StrictMode } from 'react';
 import App from './App.tsx';
 import './global.css';
@@ -20,7 +21,8 @@ createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <Routes>
           <Route path="/" element={<App />}>
-            <Route index element={<Home />} />
+            <Route index element={<ShortLinks />} />
+            <Route path="/:key" element={<RedirectLinks />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route element={<RenderForms />}>
               <Route path="verify-email" element={<VerifyEmailForm />} />

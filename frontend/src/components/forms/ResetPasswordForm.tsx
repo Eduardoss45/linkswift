@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 const ResetPasswordForm = () => {
   const { token } = useParams();
   const navigate = useNavigate();
-  const { resetPasswordRequest, loading } = useConnectApi(); // removido error e response
+  const { resetPasswordRequest, loading } = useConnectApi(); // removido error e res
 
   const [formData, setFormData] = useState({
     password: '',
@@ -33,12 +33,12 @@ const ResetPasswordForm = () => {
     }
 
     try {
-      const response = await resetPasswordRequest(
+      const res = await resetPasswordRequest(
         token,
         formData.password,
         formData.confirmPassword
       );
-      toast.success(response?.message || 'Senha redefinida com sucesso!');
+      toast.success(res?.message || 'Senha redefinida com sucesso!');
       setTimeout(() => navigate('/login'), 3000);
     } catch (err: any) {
       toast.error(err?.message || 'Erro ao redefinir a senha.');
