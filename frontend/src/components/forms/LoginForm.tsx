@@ -38,21 +38,26 @@ const LoginForm = () => {
   };
 
   useEffect(() => {
-    if (response && user) {
+    if (response?.user) {
+      const { verificado } = response.user;
       toast.success(response.message || 'Login realizado com sucesso!');
+
       setTimeout(() => {
-        if (user.verificado === true) {
+        if (verificado) {
           navigate('/');
         } else {
           navigate('/verify-email');
         }
       }, 3000);
+
+      // Atualiza o contexto após o login bem-sucedido
+      context.setUser?.({ ...response.user, logado: true });
     }
 
     if (error) {
       toast.error(error.message || 'Erro ao realizar login.');
     }
-  }, [response, error, user, navigate]);
+  }, [response, error, navigate]);
 
   return (
     <form onSubmit={handleSubmit}>

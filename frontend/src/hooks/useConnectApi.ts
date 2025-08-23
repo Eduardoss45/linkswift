@@ -94,7 +94,7 @@ export const useConnectApi = () => {
         if (token && user) {
           localStorage.setItem('jwt_token', token);
           localStorage.setItem('user_data', JSON.stringify(user));
-          setUser(user);
+          setUser({ ...user, logado: true });
           setResponse(res.data);
           scheduleRefresh(token);
         } else {
@@ -149,7 +149,7 @@ export const useConnectApi = () => {
       if (token && user) {
         localStorage.setItem('jwt_token', token);
         localStorage.setItem('user_data', JSON.stringify(user));
-        setUser(user);
+        setUser({ ...user, logado: true });
         setResponse(res.data);
         scheduleRefresh(token);
       } else {

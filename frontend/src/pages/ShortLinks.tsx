@@ -10,6 +10,7 @@ import { AuthContext } from '@/contexts/AuthContext';
 
 const ShortLinks = () => {
   const context = useContext(AuthContext);
+  console.log(context)
   const user = context?.user;
   const { shortenLink, loading } = useLinkManager();
 

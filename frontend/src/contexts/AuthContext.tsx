@@ -6,33 +6,33 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, refreshToken } = useConnectApi();
-  const [logado, setLogado] = useState(false);
+
+  // Gerencia o estado do user localmente, inicia com user do hook
+  const [localUser, setLocalUser] = useState(user);
 
   useEffect(() => {
-    setLogado(!!user);
+    setLocalUser(user);
   }, [user]);
 
   useEffect(() => {
-    if (!logado) return;
+    if (!localUser) return;
     const interval = setInterval(() => {
       refreshToken();
     }, 14 * 60 * 1000);
-
     return () => clearInterval(interval);
-  }, [logado, refreshToken]);
+  }, [localUser, refreshToken]);
 
-  const value: AuthContextType = {
-    user: user ? { ...user, logado } : null,
+  const contextValue: AuthContextType = {
+    user: localUser,
+    setUser: setLocalUser, // setUser local para atualizar localUser
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth deve ser usado dentro de AuthProvider');
-  }
+  if (!context) throw new Error('useAuth deve ser usado dentro do AuthProvider');
   return context;
 };
 

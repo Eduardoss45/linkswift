@@ -111,7 +111,7 @@ const MenuHamburguer = () => {
                 <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
                   Login
                 </div>
-                <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
+                <div className="btn-menu-flutuante" onClick={() => navigate('/register')}>
                   Cadastre-se
                 </div>
               </>

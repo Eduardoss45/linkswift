@@ -14,7 +14,7 @@ export interface ApiResponse {
   success?: boolean;
   message?: string;
   token?: string;
-  user?: { id: string; nome: string; email: string };
+  user?: { id: string; nome: string; email: string; verificado: boolean };
   url?: string;
   senhaNecessaria?: boolean;
 }
@@ -40,7 +40,8 @@ export interface AuthContextType {
     nome: string;
     verificado: boolean;
     logado: boolean;
-  };
+  } | null;
+  setUser: React.Dispatch<React.SetStateAction<AuthContextType['user']>>;
 }
 
 export interface ShortenLinkData {
