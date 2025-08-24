@@ -10,7 +10,6 @@ import { AuthContext } from '@/contexts/AuthContext';
 
 const ShortLinks = () => {
   const context = useContext(AuthContext);
-  console.log(context)
   const user = context?.user;
   const { shortenLink, loading } = useLinkManager();
 
@@ -93,6 +92,20 @@ const ShortLinks = () => {
     } catch (err: any) {
       toast.error(err?.message || 'Falha ao encurtar link.');
     }
+  };
+
+  const formatarExpiracao = (dias: number) => {
+    if (!dias || dias <= 0) return '';
+
+    const hoje = new Date();
+    const expira = new Date();
+    expira.setDate(hoje.getDate() + dias);
+
+    const dia = String(expira.getDate()).padStart(2, '0');
+    const mes = String(expira.getMonth() + 1).padStart(2, '0');
+    const ano = expira.getFullYear();
+
+    return `${dia}/${mes}/${ano} (em ${dias} dia${dias > 1 ? 's' : ''})`;
   };
 
   return (
@@ -185,13 +198,27 @@ const ShortLinks = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="expira_em">Expira em (opcional)</Label>
+            <Label htmlFor="expira_em">
+              Expira em (opcional)
+              {formData.expira_em && parseInt(formData.expira_em) > 0 && (
+                <span className="ml-2 text-gray-500">
+                  - {formatarExpiracao(parseInt(formData.expira_em))}
+                </span>
+              )}
+            </Label>
             <Input
               id="expira_em"
-              type="text"
-              placeholder="Ex: 2025-12-31 ou 30d"
+              type="number"
+              min={1}
+              max={365}
+              placeholder="Digite a quantidade de dias até expirar (padrão 7 dias)"
               value={formData.expira_em}
-              onChange={e => setFormData(prev => ({ ...prev, expira_em: e.target.value }))}
+              onChange={e => {
+                let dias = parseInt(e.target.value) || 0;
+                if (dias > 365) dias = 365; // limite máximo
+                if (dias < 0) dias = 0; // mínimo 0
+                setFormData(prev => ({ ...prev, expira_em: dias.toString() }));
+              }}
               disabled={!user?.verificado}
             />
           </div>

@@ -24,7 +24,11 @@ export const useLinkManager = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.post<ApiResponse>(import.meta.env.VITE_ROTA_SHORTEN, data);
+      const res = await api.post<ApiResponse>(import.meta.env.VITE_ROTA_SHORTEN, data, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('jwt_token') || ''}`,
+        },
+      });
       setResponse(res.data);
       return res.data;
     } catch (err) {

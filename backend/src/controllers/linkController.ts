@@ -16,21 +16,31 @@ const redis = ioRedisClient();
 // * encurta links
 export async function shortenLinks(req: Request, res: Response): Promise<void> {
   const { url, senha, nome, expira_em, privado } = req.body;
-  const criado_por = typeof req.user?._id === 'object' ? req.user._id.toString() : null;
+
+  const criado_por = req.user?._id
+    ? typeof req.user._id === 'object'
+      ? req.user._id.toString()
+      : req.user._id
+    : null;
+
   if ((privado || (typeof nome === 'string' && nome.trim())) && !criado_por) {
     return sendErrorResponse(res, 401, 'Links privados ou nomeados requerem autenticação.');
   }
+
   if (privado && senha) {
     return sendErrorResponse(res, 400, 'Links privados não podem ter senha.');
   }
+
   if (!url || !checkUrl(url)) {
     return sendErrorResponse(res, 400, 'URL inválida ou não fornecida');
   }
+
   try {
     let key: string;
     do {
       key = generateKey();
     } while (await LinkModel.exists({ key }));
+
     let senhaHash: string | null = null;
     if (senha) {
       if (senha.length < 6) {
@@ -38,12 +48,18 @@ export async function shortenLinks(req: Request, res: Response): Promise<void> {
       }
       senhaHash = await bcrypt.hash(senha, 10);
     }
+
+    const dias = parseInt(expira_em) || 7;
+
+    const expira = new Date();
+    expira.setDate(expira.getDate() + dias);
+
     const newLink = await LinkModel.create({
       url,
       key,
       senha: senhaHash,
       privado,
-      expira_em,
+      expira_em: expira,
       criado_por,
     });
     const linkData: LinkData = {
@@ -52,15 +68,18 @@ export async function shortenLinks(req: Request, res: Response): Promise<void> {
       key,
       senha: senhaHash,
       privado: !!privado,
-      expira_em: expira_em || null,
+      expira_em: expira.toISOString().split('T')[0],
       nome: nome || null,
       criado_por: newLink.criado_por || null,
       criado_em: newLink.criado_em,
     };
-    await redis.set(`${key}`, JSON.stringify(linkData), 'EX', 60 * 60 * 24 * 7);
+
+    await redis.set(`${key}`, JSON.stringify(linkData), 'EX', 60 * 60 * 24 * dias);
+
     if (criado_por) {
       await UserModel.findByIdAndUpdate(criado_por, { $push: { links: newLink._id } });
     }
+
     const shortUrl = `${process.env.BASE_URL_FRONTEND}/${key}`;
     return sendSuccessResponse(res, 201, 'Link encurtado com sucesso', { url: shortUrl });
   } catch (error) {

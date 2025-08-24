@@ -31,7 +31,7 @@ export interface BaseLinkData {
   key: string;
   senha: string | null;
   privado: boolean;
-  expira_em?: Date | null;
+  expira_em: string | null;
   nome?: string | null;
 }
 
