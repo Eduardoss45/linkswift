@@ -1,17 +1,12 @@
-import { Request, Response } from 'express';
+import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import UserModel from '../models/User.js';
+import { sendEmail } from '../email/email.js';
+import { Request, Response } from 'express';
 import { sendSuccessResponse, sendErrorResponse } from '../utils/helpers.js';
 import { TokenPayload } from '../types/types.js';
-import UserModel from '../models/User.js';
-import crypto from 'crypto';
-import { enviarEmail } from '../config/email.js';
 
-if (!process.env.JWT_SECRET || !process.env.REFRESH_SECRET) {
-  throw new Error('Segredos JWT não definidos no .env');
-}
-
-// * Registrar usuário
 export const register = async (req: Request, res: Response) => {
   const { nome, email, password, confirmPassword } = req.body;
   if (!nome || !email || !password || !confirmPassword) {
@@ -41,11 +36,11 @@ export const register = async (req: Request, res: Response) => {
       verificationCode,
     });
     await newUser.save();
-    await enviarEmail(
-      email,
-      'Verifique seu e-mail',
-      `Olá, ${nome}!\n\nSeu código de verificação é: ${verificationCode}`
-    );
+    await sendEmail({
+      to: email,
+      subject: 'Verifique seu e-mail',
+      content: `Olá, ${nome}!\n\nSeu código de verificação é: ${verificationCode}`,
+    });
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -113,11 +108,11 @@ export const reenviarCodigo = async (req: Request, res: Response) => {
 
     user.verificationCode = verificationCode;
     await user.save();
-    await enviarEmail(
-      email,
-      'Verifique seu e-mail',
-      `Olá, ${user.nome}!\n\nSeu novo código de verificação é: ${verificationCode}`
-    );
+    await sendEmail({
+      to: email,
+      subject: 'Verifique seu e-mail',
+      content: `Olá, ${user.nome}!\n\nSeu novo código de verificação é: ${verificationCode}`,
+    });
     sendSuccessResponse(res, 200, 'Código de verificação reenviado com sucesso.');
     return;
   } catch (error) {
@@ -272,10 +267,12 @@ export const forgotPassword = async (req: Request, res: Response) => {
       console.log(`[Reset Link]: ${resetLink}`);
     }
 
-    await enviarEmail(email, 'Redefinição de senha - Link de acesso', htmlContent, {
-      isHtml: true,
+    await sendEmail({
+      to: email,
+      subject: 'Redefinição de senha - Link de acesso',
+      content: htmlContent,
+      options: { isHtml: true },
     });
-
     sendSuccessResponse(res, 200, 'Redefinição de senha solicitada com sucesso.');
     return;
   } catch (error) {
@@ -316,11 +313,11 @@ export const resetPassword = async (req: Request, res: Response) => {
   user.resetPasswordExpires = undefined;
 
   await user.save();
-  await enviarEmail(
-    user.email,
-    'Senha redefinida com sucesso',
-    `Olá, ${user.nome}, sua senha foi alterada com sucesso.`
-  );
+  await sendEmail({
+    to: user.email,
+    subject: 'Senha redefinida com sucesso',
+    content: `Olá, ${user.nome}, sua senha foi alterada com sucesso.`,
+  });
 
   sendSuccessResponse(res, 200, 'Senha redefinida com sucesso.');
 };

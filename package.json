@@ -15,8 +15,7 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "start": "",
-    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+    "start": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
