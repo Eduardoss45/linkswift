@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export async function sendEmail({ to, subject, content, options }: EmailData) {
+export const sendEmail = async ({ to, subject, content, options }: EmailData) => {
   const mailOptions = {
     from: 'Linkswift',
     to,
@@ -18,4 +18,4 @@ export async function sendEmail({ to, subject, content, options }: EmailData) {
     ...(options?.isHtml ? { html: content } : { text: content }),
   };
   await transporter.sendMail(mailOptions);
-}
+};

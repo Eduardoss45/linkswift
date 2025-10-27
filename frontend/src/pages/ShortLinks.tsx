@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState } from 'react';
 import { useLinkManager } from '@/hooks/useManagerLink.ts';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,11 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { AuthContext } from '@/contexts/AuthContext';
+import { useAuthStore } from '@/store/authStore';
 
 const ShortLinks = () => {
-  const context = useContext(AuthContext);
-  const user = context?.user;
+  const { isAuthenticated } = useAuthStore();
   const { shortenLink, loading } = useLinkManager();
 
   const [formData, setFormData] = useState({
@@ -32,7 +31,7 @@ const ShortLinks = () => {
   };
 
   const handlePrivadoToggle = () => {
-    if (!user?.verificado) {
+    if (!isAuthenticated) {
       toast.warning('Faça login para criar links privados.');
       return;
     }
@@ -79,10 +78,10 @@ const ShortLinks = () => {
 
     const finalData = {
       url: formData.url.trim(),
-      nome: user?.verificado ? formData.nome.trim() : '',
+      nome: isAuthenticated ? formData.nome.trim() : '',
       senha: senhaVisible ? formData.senha.trim() : '',
       expira_em: formData.expira_em.trim(),
-      privado: !!user?.verificado && formData.privado,
+      privado: !!isAuthenticated && formData.privado,
     };
 
     try {
@@ -145,33 +144,30 @@ const ShortLinks = () => {
           <CardTitle>Configurações Extras</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {!user?.verificado && (
+          {!isAuthenticated && (
             <div className="text-sm text-red-600">
               ⚠️ Faça login para acessar as configurações extras.
             </div>
           )}
 
-          <div className={`space-y-2 ${!user?.verificado ? 'opacity-50 pointer-events-none' : ''}`}>
+          <div className="space-y-2">
             <Label htmlFor="nome">Nome do link (opcional)</Label>
             <Input
               id="nome"
               placeholder="Digite um nome para seu link"
               value={formData.nome}
               onChange={e => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+              disabled={!isAuthenticated}
             />
           </div>
 
-          <div
-            className={`flex items-center gap-1 ${
-              !user?.verificado ? 'opacity-50 pointer-events-none' : ''
-            }`}
-          >
+          <div className="flex items-center gap-1">
             <Label htmlFor="privado">Privado</Label>
             <Switch
               id="privado"
               checked={formData.privado}
               onCheckedChange={handlePrivadoToggle}
-              disabled={senhaVisible}
+              disabled={!isAuthenticated || senhaVisible}
             />
           </div>
 
@@ -219,7 +215,7 @@ const ShortLinks = () => {
                 if (dias < 0) dias = 0; // mínimo 0
                 setFormData(prev => ({ ...prev, expira_em: dias.toString() }));
               }}
-              disabled={!user?.verificado}
+              disabled={!isAuthenticated}
             />
           </div>
         </CardContent>

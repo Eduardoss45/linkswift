@@ -3,27 +3,17 @@ import { toast } from 'sonner';
 import { useConnectApi } from '@/hooks/useConnectApi';
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuthStore } from '@/store/authStore';
 import { Menu, X } from 'lucide-react';
 
 const MenuHamburguer = () => {
-  const context = useAuth();
+  const { isAuthenticated, logout: logoutFromStore } = useAuthStore();
   const [menuFlutuante, setMenuFlutuante] = useState(false);
-  const [exibindo, setExibindo] = useState(false);
   const navigate = useNavigate();
   const { logoutUser, error, response } = useConnectApi();
 
   const menuRef = useRef<HTMLDivElement>(null);
   const botaoRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!context) {
-      console.error('Erro: contexto de autenticação não encontrado.');
-      return;
-    }
-    const { user } = context;
-    setExibindo(!!user?.logado);
-  }, [context]);
 
   const abrirMenu = () => {
     setMenuFlutuante(prev => !prev);
@@ -32,6 +22,7 @@ const MenuHamburguer = () => {
   const logout = async () => {
     try {
       await logoutUser();
+      logoutFromStore();
       setMenuFlutuante(false);
       toast.success(response?.message || 'Logout realizado com sucesso.');
       setTimeout(() => {
@@ -88,7 +79,7 @@ const MenuHamburguer = () => {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            {exibindo ? (
+            {isAuthenticated ? (
               <>
                 <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
                   Meus Links

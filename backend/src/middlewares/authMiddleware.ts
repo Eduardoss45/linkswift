@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import UserModel from '../models/User.js';
+import UserModel from '../models/userModel.js';
 import { TokenPayload } from '../types/types.js';
 
 async function verifyTokenAndGetUser(token?: string) {

@@ -33,17 +33,6 @@ export interface User {
   verificationCode?: string;
 }
 
-export interface AuthContextType {
-  user: {
-    id: string;
-    email: string;
-    nome: string;
-    verificado: boolean;
-    logado: boolean;
-  } | null;
-  setUser: React.Dispatch<React.SetStateAction<AuthContextType['user']>>;
-}
-
 export interface ShortenLinkData {
   url: string;
   senha: string;

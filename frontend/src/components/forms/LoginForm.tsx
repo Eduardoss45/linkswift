@@ -1,8 +1,8 @@
 import { useConnectApi } from '@/hooks/useConnectApi.ts';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState, useEffect, useContext } from 'react';
-import { AuthContext } from '@/contexts/AuthContext';
+import { useState, useEffect } from 'react';
+import { useAuthStore } from '@/store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -13,11 +13,8 @@ const LoginForm = () => {
   });
   const { loginUser, loading, error, response } = useConnectApi();
   const navigate = useNavigate();
-  const context = useContext(AuthContext)!;
-  if (!context) {
-    return <p>Erro: usuário não autenticado.</p>;
-  }
-  const { user } = context;
+  const login = useAuthStore((state) => state.login);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
@@ -38,26 +35,23 @@ const LoginForm = () => {
   };
 
   useEffect(() => {
-    if (response?.user) {
-      const { verificado } = response.user;
+    if (response?.user && response?.token) {
+      const { user, token } = response;
       toast.success(response.message || 'Login realizado com sucesso!');
-
+      login(token, user);
       setTimeout(() => {
-        if (verificado) {
+        if (user.verificado) {
           navigate('/');
         } else {
           navigate('/verify-email');
         }
       }, 3000);
-
-      // Atualiza o contexto após o login bem-sucedido
-      context.setUser?.({ ...response.user, logado: true });
     }
 
     if (error) {
       toast.error(error.message || 'Erro ao realizar login.');
     }
-  }, [response, error, navigate]);
+  }, [response, error, navigate, login]);
 
   return (
     <form onSubmit={handleSubmit}>
