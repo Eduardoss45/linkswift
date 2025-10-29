@@ -8,50 +8,51 @@ import { toast } from 'sonner';
 import { useLinkManager } from '@/hooks/useManagerLink';
 
 const RedirectLinks = () => {
-  const { key } = useParams();
+  const { key } = useParams<{ key: string }>();
   const [senha, setSenha] = useState('');
   const [needsPassword, setNeedsPassword] = useState(false);
-  const [checked, setChecked] = useState(false); // marca que já checou se precisa senha
+  const [isLoading, setIsLoading] = useState(true);
   const { redirectToLink, checkLinkNeedsPassword, loading } = useLinkManager();
 
   useEffect(() => {
-    if (!key) return;
+    const handleRedirect = async () => {
+      if (!key) return;
 
-    checkLinkNeedsPassword(key)
-      .then(data => {
-        if (!data.senhaNecessaria && data.url) {
-          window.location.href = data.url;
-          setChecked(true);
-        } else {
+      try {
+        const linkInfo = await checkLinkNeedsPassword(key);
+
+        if (linkInfo.senhaNecessaria) {
+          // link protegido → mostrar tela de senha
           setNeedsPassword(true);
-          setChecked(true);
+        } else {
+          // público ou privado → redireciona direto
+          await redirectToLink(key);
         }
-      })
-      .catch(() => {
-        toast.error('Erro ao carregar o link.');
-        setChecked(true);
-      });
-  }, [key, checkLinkNeedsPassword]);
+      } catch (error) {
+        toast.error('Link não encontrado ou inválido.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    handleRedirect();
+  }, [key, checkLinkNeedsPassword, redirectToLink]);
 
   const handleSubmit = async () => {
-    if (!senha || senha.length < 5) {
+    if (!key) return;
+    if (!senha || senha.length < 6) {
       toast.error('A senha precisa ter pelo menos 6 caracteres.');
       return;
     }
 
     try {
-      const res = await redirectToLink(key!, senha);
-      if (res?.url) {
-        window.location.href = res.url;
-      } else {
-        toast.error(res?.message || 'Senha incorreta.');
-      }
+      await redirectToLink(key, senha);
     } catch {
-      toast.error('Erro ao verificar senha.');
+      toast.error('Senha incorreta ou erro ao redirecionar.');
     }
   };
 
-  if (!checked) {
+  if (isLoading) {
     return (
       <div className="p-6 flex justify-center items-center min-h-[75vh] bg-gray-100">
         Carregando...
@@ -60,7 +61,6 @@ const RedirectLinks = () => {
   }
 
   if (!needsPassword) {
-    // Caso, por algum motivo, chegou aqui e não precisa de senha, evita mostrar o formulário
     return (
       <div className="p-6 flex justify-center items-center min-h-[75vh] bg-gray-100">
         Redirecionando...

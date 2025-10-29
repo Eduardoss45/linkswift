@@ -3,43 +3,72 @@ import jwt from 'jsonwebtoken';
 import UserModel from '../models/userModel.js';
 import { TokenPayload } from '../types/types.js';
 
+// Função auxiliar para verificar o token e buscar o usuário
 async function verifyTokenAndGetUser(token?: string) {
   if (!token) return null;
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || '') as TokenPayload;
-    const user = await UserModel.findById(decoded.userId);
+    const user = await UserModel.findById(decoded.userId).select('_id email');
     return user;
   } catch {
     return null;
   }
 }
 
+// 🔒 Middleware obrigatório (bloqueia se não tiver token válido)
 export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader?.split(' ')[1];
-  const user = await verifyTokenAndGetUser(token);
-  if (!user) {
-    res.status(401).json({
+  try {
+    const authHeader = req.headers.authorization;
+    const headerToken =
+      authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    // 🔹 agora busca também em cookies refreshToken ou token
+    const cookieToken = req.cookies?.token || req.cookies?.accessToken || req.cookies?.refreshToken;
+
+    const token = headerToken || cookieToken;
+    const user = await verifyTokenAndGetUser(token);
+
+    if (!user) {
+      res.status(401).json({
+        success: false,
+        message: 'Acesso negado. Token inválido ou não fornecido.',
+      });
+      return;
+    }
+
+    req.user = user;
+    next();
+  } catch (err) {
+    console.error('Erro no authenticateToken:', err);
+    res.status(500).json({
       success: false,
-      message: 'Acesso negado. Token inválido ou não fornecido.',
+      message: 'Erro interno na autenticação.',
     });
-    return;
   }
-  req.user = user;
-  next();
 };
 
+// 🟡 Middleware opcional (não bloqueia, mas adiciona req.user se possível)
 export const optionalAuthenticateToken = async (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader?.split(' ')[1];
-  const user = await verifyTokenAndGetUser(token);
+  try {
+    const authHeader = req.headers.authorization;
+    const headerToken =
+      authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
-  if (user) {
-    req.user = user;
+    const cookieToken = req.cookies?.token || req.cookies?.accessToken || req.cookies?.refreshToken;
+
+    const token = headerToken || cookieToken;
+    const user = await verifyTokenAndGetUser(token);
+
+    if (user) {
+      req.user = user;
+    }
+  } catch (err) {
+    console.warn('Falha silenciosa no optionalAuthenticateToken:', err);
   }
+
   next();
 };

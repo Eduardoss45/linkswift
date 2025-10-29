@@ -11,6 +11,7 @@ export interface LoginData {
 }
 
 export interface ApiResponse {
+  tipo?: string;
   success?: boolean;
   message?: string;
   token?: string;
@@ -39,4 +40,11 @@ export interface ShortenLinkData {
   nome: string;
   privado: boolean;
   expira_em?: string;
+}
+
+export interface CheckLinkResponse {
+  message: string;
+  privado: boolean;
+  senhaNecessaria: boolean;
+  url: string | null;
 }

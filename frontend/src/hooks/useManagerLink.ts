@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import axios from 'axios';
-import { ApiResponse, ErrorResponse, ShortenLinkData } from '../interfaces';
+import { ApiResponse, ErrorResponse, ShortenLinkData, CheckLinkResponse } from '../interfaces';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -42,12 +42,31 @@ export const useLinkManager = () => {
   const redirectToLink = useCallback(async (key: string, senha?: string) => {
     setLoading(true);
     setError(null);
+
     try {
-      const res = await api.post<ApiResponse>(`${import.meta.env.VITE_ROTA_REDIRECT}${key}`, {
-        senha,
-      });
-      setResponse(res.data);
-      return res.data;
+      const infoRes = await api.get<CheckLinkResponse>(`/check/${key}`);
+      const linkInfo = infoRes.data;
+
+      let redirectUrl = '';
+
+      if (linkInfo.privado) {
+        redirectUrl = `/private/${key}`;
+      } else if (linkInfo.senhaNecessaria) {
+        if (!senha) {
+          return { needsPassword: true };
+        }
+        redirectUrl = `/protected/${key}?senha=${senha}`;
+      } else {
+        redirectUrl = `/public/${key}`;
+      }
+
+      if (!linkInfo.url && !senha) {
+        return { pending: true };
+      }
+
+      window.location.href = `${import.meta.env.VITE_API_BASE_URL}${redirectUrl}`;
+
+      return { success: true };
     } catch (err) {
       handleApiError(err);
       throw err;
@@ -60,7 +79,7 @@ export const useLinkManager = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get<ApiResponse>(`${import.meta.env.VITE_ROTA_CHECK}${key}`);
+      const res = await api.get<ApiResponse>(`/check/${key}`);
       setResponse(res.data);
       return res.data;
     } catch (err) {

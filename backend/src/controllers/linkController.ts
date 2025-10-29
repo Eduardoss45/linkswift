@@ -108,59 +108,69 @@ export const redirectToLinks = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  console.log('Aqui executou!');
-  const { key } = req.params;
-  const { senha } = req.body;
-  const link = await redis.get(key);
+  try {
+    const { key } = req.params;
+    const { senha } = req.query as { senha?: string };
 
-  if (!link) {
-    throw new NotFoundError({ message: 'Link não encontrado.' });
+    const cacheData = await redis.get(key);
+    if (!cacheData) {
+      return next(new NotFoundError({ message: 'Link não encontrado.' }));
+    }
+
+    const linkData = JSON.parse(cacheData);
+
+    // 🔒 Links privados
+    if (linkData.privado) {
+      const userId = req.user?._id?.toString();
+
+      if (!userId) {
+        return next(
+          new BadRequestError({
+            message: 'Autenticação necessária.',
+            context: { reason: 'auth_required', redirect: '/login' },
+          })
+        );
+      }
+
+      if (linkData.criado_por !== userId) {
+        return next(
+          new ForbiddenError({
+            message: 'Acesso negado. Este link pertence a outro usuário.',
+          })
+        );
+      }
+
+      // ✅ Interrompe o fluxo aqui se o usuário não é dono
+    }
+
+    // 🔑 Links com senha
+    if (linkData.senha) {
+      if (!senha) {
+        return next(
+          new BadRequestError({
+            message: 'Senha necessária para acessar o link.',
+            context: {
+              reason: 'password_required',
+              redirect: `${process.env.BASE_URL_FRONTEND}/password/${key}`,
+            },
+          })
+        );
+      }
+
+      const senhaValida = await bcrypt.compare(senha, linkData.senha);
+      if (!senhaValida) {
+        return next(new BadRequestError({ message: 'Senha incorreta.' }));
+      }
+
+      return successResponse(res, 201, 'Link autorizado', { url: linkData.url });
+    }
+
+    // 🌐 Redirecionamento final
+    return res.redirect(linkData.url);
+  } catch (err) {
+    console.error('⚠️ Erro inesperado em redirectToLinks:', err);
+    next(err);
   }
-
-  const linkData = JSON.parse(link);
-
-  console.log(linkData.privado);
-  if (linkData.privado) {
-    const user = req.user?._id?.toString();
-    if (!user) {
-      throw new BadRequestError({
-        message: 'Autenticação necessária.',
-        context: {
-          reason: 'auth_required',
-          redirect: '/login',
-        },
-      });
-    }
-    const acesso = await UserModel.exists({ _id: user, links: key });
-    if (!acesso) {
-      throw new ForbiddenError({
-        message: 'Acesso negado ao link exclusivo.',
-      });
-    }
-  }
-
-  if (linkData.senha) {
-    if (!senha) {
-      throw new BadRequestError({
-        message: 'Senha necessária para acessar o link.',
-        context: {
-          reason: 'password_required',
-          redirect: `${process.env.BASE_URL_FRONTEND}/password/${key}`,
-        },
-      });
-    }
-
-    const senhaValida = await bcrypt.compare(senha, linkData.senha);
-    if (!senhaValida) {
-      throw new BadRequestError({
-        message: 'Senha incorreta.',
-      });
-    }
-
-    return successResponse(res, 201, 'Link autorizado', { url: linkData.url });
-  }
-
-  return res.redirect(linkData.url);
 };
 
 // export async function listAllLinks(req: Request, res: Response, next: NextFunction): Promise<void> {
