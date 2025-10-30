@@ -25,9 +25,9 @@ export const useLinkManager = () => {
     setError(null);
     try {
       const res = await api.post<ApiResponse>(import.meta.env.VITE_ROTA_SHORTEN, data, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('jwt_token') || ''}`,
-        },
+        // ! headers: {
+        // !   Authorization: `Bearer ${localStorage.getItem('jwt_token') || ''}`,
+        // ! },
       });
       setResponse(res.data);
       return res.data;

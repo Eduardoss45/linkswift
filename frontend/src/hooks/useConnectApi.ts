@@ -92,7 +92,6 @@ export const useConnectApi = () => {
         const res = await api.post<ApiResponse>(import.meta.env.VITE_ROTA_LOGIN, data);
         const { token, user } = res.data || {};
         if (token && user) {
-          localStorage.setItem('jwt_token', token);
           localStorage.setItem('user_data', JSON.stringify(user));
           setUser({ ...user, logado: true });
           setResponse(res.data);
@@ -120,7 +119,6 @@ export const useConnectApi = () => {
           withCredentials: true,
         }
       );
-      localStorage.removeItem('jwt_token');
       localStorage.removeItem('user_data');
       setUser(null);
       setResponse({ message: res.data?.message });
@@ -147,7 +145,6 @@ export const useConnectApi = () => {
       );
       const { token, user } = res.data || {};
       if (token && user) {
-        localStorage.setItem('jwt_token', token);
         localStorage.setItem('user_data', JSON.stringify(user));
         setUser({ ...user, logado: true });
         setResponse(res.data);

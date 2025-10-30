@@ -48,8 +48,10 @@ export interface LinkData extends BaseLinkData {
 export interface LinkDocument extends Document, BaseLinkData {
   _id: Types.ObjectId;
   originalUrl: string;
+  token: string;
   expiresAt?: Date | null;
   criado_por: Types.ObjectId | UserDocument | null;
+  handshake_usado: boolean;
   analytics: {
     total_clicks: number;
     clicks_por_dia: { data: string; quantidade: number }[];
@@ -57,4 +59,3 @@ export interface LinkDocument extends Document, BaseLinkData {
   };
   criado_em: Date;
 }
-
