@@ -119,7 +119,6 @@ export const redirectToLinks = async (
 
     const linkData = JSON.parse(cacheData);
 
-    // 🔒 Links privados
     if (linkData.privado) {
       const userId = req.user?._id?.toString();
 
@@ -139,11 +138,8 @@ export const redirectToLinks = async (
           })
         );
       }
-
-      // ✅ Interrompe o fluxo aqui se o usuário não é dono
     }
 
-    // 🔑 Links com senha
     if (linkData.senha) {
       if (!senha) {
         return next(
@@ -165,7 +161,6 @@ export const redirectToLinks = async (
       return successResponse(res, 201, 'Link autorizado', { url: linkData.url });
     }
 
-    // 🌐 Redirecionamento final
     return res.redirect(linkData.url);
   } catch (err) {
     console.error('⚠️ Erro inesperado em redirectToLinks:', err);
@@ -173,108 +168,9 @@ export const redirectToLinks = async (
   }
 };
 
-// export async function listAllLinks(req: Request, res: Response, next: NextFunction): Promise<void> {
-//   const _id = typeof req.user?._id === 'object' ? req.user._id.toString() : null;
-//   if (!_id) {
-//     throw new BadRequestError({
-//       message: 'Usuário não autenticado',
-//     });
-//   }
-//
-//   const user = await UserModel.findById(_id).lean();
-//   if (!user || !user.links || user.links.length === 0) {
-//     return successResponse(res, 200, 'Nenhum link encontrado', {
-//       links: [],
-//     });
-//   }
-//
-//   const userLinkIds = new Set(user.links);
-//   const links: { id: string; data: RedisLinkData }[] = [];
-//
-//   let cursor = 0;
-//   do {
-//     const [newCursor, keys] = await redis.scan(cursor, 'MATCH', 'short:*', 'COUNT', 100);
-//
-//     const values = await Promise.all(
-//       keys.map(async key => {
-//         const id = key.replace('short:', '');
-//         if (!userLinkIds.has(id)) return null;
-//         const value = await redis.get(key);
-//         if (!value) return null;
-//         try {
-//           const parsed = JSON.parse(value);
-//           return { id, data: parsed };
-//         } catch {
-//           return null;
-//         }
-//       })
-//     );
-//
-//     links.push(...values.filter((v): v is { id: string; data: RedisLinkData } => v !== null));
-//     cursor = Number(newCursor);
-//   } while (cursor !== 0);
-//   return successResponse(res, 200, 'Links encontrados com sucesso', {
-//     links,
-//   });
-// }
-//
-// export async function updateLinks(req: Request, res: Response, next: NextFunction): Promise<void> {
-//   const { id } = req.params;
-//   const { url, nome, password, exclusive } = req.body;
-//   const linkDataStr = await redis.get(`short:${id}`);
-//   if (!linkDataStr) {
-//     throw new NotFoundError({
-//       message: 'Link não encontrado.',
-//     });
-//   }
-//
-//   const ttl = await redis.ttl(`short:${id}`);
-//   const validTTL = ttl > 0 ? ttl : 60 * 60 * 24 * 7;
-//   const linkData = JSON.parse(linkDataStr);
-//   const isExclusive = exclusive === true;
-//   const hasPassword = typeof password === 'string' && password.trim() !== '';
-//   if (isExclusive && hasPassword) {
-//     throw new BadRequestError({
-//       message: 'Links exclusivos não podem ter senha.',
-//     });
-//   }
-//   if (typeof url === 'string' && url.trim() !== '') linkData.url = url.trim();
-//   if (typeof nome === 'string') linkData.nome = nome.trim();
-//   if (exclusive !== undefined) linkData.exclusive = isExclusive;
-//   if (password !== undefined) {
-//     linkData.password = typeof password === 'string' ? password.trim() : linkData.password || '';
-//   }
-//   await redis.set(`${id}`, JSON.stringify(linkData), 'EX', validTTL);
-//   return successResponse(res, 200, 'Link atualizado com sucesso', {
-//     id,
-//     url: linkData.url,
-//   });
-// }
-//
-// export async function deleteLinks(req: Request, res: Response, next: NextFunction): Promise<void> {
-//   const { id } = req.params;
-//   const _id = typeof req.user?._id === 'object' ? req.user._id.toString() : null;
-//   if (!_id) {
-//     throw new BadRequestError({
-//       message: 'Usuário não autenticado',
-//     });
-//   }
-//   const user = await UserModel.findById(_id);
-//   if (!user || !user.links.includes(id)) {
-//     throw new ForbiddenError({
-//       message: 'Este link não pertence ao usuário',
-//     });
-//   }
-//   await redis.del(`short:${id}`);
-//   user.links = user.links.filter((linkId: string) => linkId !== id);
-//   await user.save();
-//   return successResponse(res, 200, 'Link deletado com sucesso');
-// }
-
 export const checkLink = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { key } = req.params;
   const link = await redis.get(key);
-
   if (!link) {
     throw new NotFoundError({
       message: 'Link não encontrado.',

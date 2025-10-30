@@ -42,13 +42,10 @@ export const useLinkManager = () => {
   const redirectToLink = useCallback(async (key: string, senha?: string) => {
     setLoading(true);
     setError(null);
-
     try {
-      const infoRes = await api.get<CheckLinkResponse>(`/check/${key}`);
+      const infoRes = await api.get<CheckLinkResponse>(`/links/${key}`);
       const linkInfo = infoRes.data;
-
       let redirectUrl = '';
-
       if (linkInfo.privado) {
         redirectUrl = `/private/${key}`;
       } else if (linkInfo.senhaNecessaria) {
@@ -57,15 +54,12 @@ export const useLinkManager = () => {
         }
         redirectUrl = `/protected/${key}?senha=${senha}`;
       } else {
-        redirectUrl = `/public/${key}`;
+        redirectUrl = `/r/${key}`;
       }
-
       if (!linkInfo.url && !senha) {
         return { pending: true };
       }
-
       window.location.href = `${import.meta.env.VITE_API_BASE_URL}${redirectUrl}`;
-
       return { success: true };
     } catch (err) {
       handleApiError(err);
@@ -79,7 +73,7 @@ export const useLinkManager = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get<ApiResponse>(`/check/${key}`);
+      const res = await api.get<ApiResponse>(`/links/${key}`);
       setResponse(res.data);
       return res.data;
     } catch (err) {
