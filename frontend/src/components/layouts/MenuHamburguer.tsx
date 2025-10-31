@@ -25,9 +25,6 @@ const MenuHamburguer = () => {
       logoutFromStore();
       setMenuFlutuante(false);
       toast.success(response?.message || 'Logout realizado com sucesso.');
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
     } catch (err) {
       toast.error(error?.message || 'Erro ao sair. Tente novamente mais tarde.');
     }

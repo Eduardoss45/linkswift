@@ -1,12 +1,18 @@
+import { Toaster } from 'sonner';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './components/layouts/Navbar';
 import Footer from './components/layouts/Footer';
-import { Toaster } from 'sonner';
+
 import { useConnectApi } from './hooks/useConnectApi';
-import { useEffect } from 'react';
+import { useAuthStore } from './store/authStore';
+import { useEffect, useState } from 'react';
 
 function App() {
   const location = useLocation();
+  const { refreshAccessToken } = useConnectApi();
+  const { setUser } = useAuthStore();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
   const noLayout = [
     '/login',
     '/register',
@@ -15,7 +21,6 @@ function App() {
     '/forgot-password',
     '/check-email',
   ];
-  const { refreshAccessToken } = useConnectApi();
 
   const hideLayout =
     noLayout.includes(location.pathname) || location.pathname.startsWith('/reset-password');
@@ -24,12 +29,18 @@ function App() {
     const initAuth = async () => {
       try {
         await refreshAccessToken();
-      } catch (error) {
-        console.log(error);
+      } catch {
+        setUser(null);
+      } finally {
+        setIsCheckingAuth(false);
       }
     };
     initAuth();
-  }, [refreshAccessToken]);
+  }, [refreshAccessToken, setUser]);
+
+  if (isCheckingAuth) {
+    return <div>Carregando...</div>;
+  }
 
   return (
     <div>
