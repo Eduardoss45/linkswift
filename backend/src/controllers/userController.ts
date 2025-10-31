@@ -62,7 +62,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
     successResponse(res, 201, 'Usuário cadastrado com sucesso!', {
       user: {
-        id: newUser._id,
+        _id: newUser._id,
         email: newUser.email,
         nome: newUser.nome,
       },
@@ -132,30 +132,34 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) throw new UnauthorizedError({ message: 'Senha incorreta.' });
 
-    const token = jwt.sign({ userId: user._id.toString() }, process.env.JWT_SECRET!, {
-      expiresIn: '24h',
+    const accessToken = jwt.sign({ userId: user._id.toString() }, process.env.JWT_SECRET!, {
+      expiresIn: '15m',
     });
-    const newRefreshToken = jwt.sign({ userId: user._id.toString() }, process.env.REFRESH_SECRET!, {
+
+    const refreshToken = jwt.sign({ userId: user._id.toString() }, process.env.REFRESH_SECRET!, {
       expiresIn: '30d',
     });
 
-    user.refreshToken = newRefreshToken;
+    user.refreshToken = refreshToken;
     await user.save();
 
-    res.cookie('refreshToken', newRefreshToken, {
+    res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
       maxAge: 30 * 24 * 60 * 60 * 1000,
+      path: '/refresh-token',
     });
 
     successResponse(res, 200, 'Login bem-sucedido.', {
-      token,
+      accessToken,
       user: {
-        id: user._id,
+        _id: user._id,
         email: user.email,
         nome: user.nome,
         verificado: user.verificado,
+        links: user.links || [],
+        createdAt: user.createdAt,
       },
     });
   } catch (error) {
@@ -178,19 +182,21 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
       throw new ForbiddenError({ message: 'Token inválido.' });
 
     const newAccessToken = jwt.sign({ userId: user._id.toString() }, process.env.JWT_SECRET || '', {
-      expiresIn: '1h',
+      expiresIn: '15m',
     });
 
     successResponse(res, 200, 'Token atualizado com sucesso.', {
-      token: newAccessToken,
+      accessToken: newAccessToken,
       user: {
-        id: user._id,
+        _id: user._id,
         email: user.email,
         nome: user.nome,
         verificado: user.verificado,
+        links: user.links || [],
+        createdAt: user.createdAt,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };

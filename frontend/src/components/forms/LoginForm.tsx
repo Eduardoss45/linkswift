@@ -13,11 +13,12 @@ const LoginForm = () => {
   });
   const { loginUser, loading, error, response } = useConnectApi();
   const navigate = useNavigate();
-  const login = useAuthStore((state) => state.login);
+  const login = useAuthStore(state => state.login);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -35,10 +36,10 @@ const LoginForm = () => {
   };
 
   useEffect(() => {
-    if (response?.user && response?.token) {
-      const { user, token } = response;
+    if (response?.user && response?.accessToken) {
+      const { user, accessToken } = response;
       toast.success(response.message || 'Login realizado com sucesso!');
-      login(token, user);
+      login(accessToken, user);
       setTimeout(() => {
         if (user.verificado) {
           navigate('/');

@@ -1,20 +1,23 @@
 import { create } from 'zustand';
 import { User } from '@/interfaces';
 
+// ! Migrar isto para modulo separado 
 interface AuthState {
   isAuthenticated: boolean;
-  token: string | null;
+  accessToken: string | null;
   user: User | null;
-  login: (token: string, user: User) => void;
+  login: (accessToken: string, user: User) => void;
   logout: () => void;
   setUser: (user: User | null) => void;
+  setAccessToken: (accessToken: string | null) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>(set => ({
   isAuthenticated: false,
-  token: null,
+  accessToken: null,
   user: null,
-  login: (token, user) => set({ isAuthenticated: true, token, user }),
-  logout: () => set({ isAuthenticated: false, token: null, user: null }),
-  setUser: (user) => set({ user }),
+  login: (accessToken, user) => set({ isAuthenticated: true, accessToken, user }),
+  logout: () => set({ isAuthenticated: false, accessToken: null, user: null }),
+  setUser: user => set({ user }),
+  setAccessToken: accessToken => set({ accessToken: accessToken }),
 }));

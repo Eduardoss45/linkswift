@@ -1,7 +1,7 @@
-import { RegisterData, LoginData, ApiResponse, ErrorResponse } from '../interfaces';
+import { RegisterData, LoginData, ApiResponse, ErrorResponse, User } from '../interfaces';
 import { useState, useCallback, useRef, useEffect } from 'react';
-import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -19,32 +19,31 @@ export const useConnectApi = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorResponse | null>(null);
   const [response, setResponse] = useState<ApiResponse | null>(null);
-  const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem('user_data');
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
+  const [user, setUser] = useState<User | null>(null);
 
   const refreshTimeoutId = useRef<number | null>(null);
+  const refreshAccessTokenRef = useRef<() => Promise<void> | null>(null);
 
   const handleApiError = (error: unknown) => {
     const err = error as { response?: { data: ErrorResponse } };
     setError(err.response?.data || { message: 'Erro ao conectar à API' });
   };
 
-  const scheduleRefresh = useCallback((token: string) => {
+  const scheduleRefresh = useCallback((accessToken: string) => {
     if (refreshTimeoutId.current) {
       clearTimeout(refreshTimeoutId.current);
+      refreshTimeoutId.current = null;
     }
 
     try {
-      const decoded = jwtDecode<JwtPayload>(token);
+      const decoded = jwtDecode<JwtPayload>(accessToken);
       const expiresAt = decoded.exp * 1000;
       const now = Date.now();
       const timeout = expiresAt - now - 60 * 1000;
 
       if (timeout > 0) {
         refreshTimeoutId.current = window.setTimeout(() => {
-          refreshToken();
+          refreshAccessTokenRef.current?.();
         }, timeout);
       }
     } catch (err) {
@@ -89,13 +88,12 @@ export const useConnectApi = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await api.post<ApiResponse>(import.meta.env.VITE_ROTA_LOGIN, data);
-        const { token, user } = res.data || {};
-        if (token && user) {
-          localStorage.setItem('user_data', JSON.stringify(user));
+        const res = await api.post<ApiResponse>('/login', data);
+        const { accessToken, user } = res.data || {};
+        if (accessToken && user) {
           setUser({ ...user, logado: true });
           setResponse(res.data);
-          scheduleRefresh(token);
+          scheduleRefresh(accessToken);
         } else {
           setError({ message: res.data?.message });
         }
@@ -119,7 +117,6 @@ export const useConnectApi = () => {
           withCredentials: true,
         }
       );
-      localStorage.removeItem('user_data');
       setUser(null);
       setResponse({ message: res.data?.message });
       if (refreshTimeoutId.current) {
@@ -132,25 +129,24 @@ export const useConnectApi = () => {
     }
   }, []);
 
-  const refreshToken = useCallback(async () => {
+  const refreshAccessToken = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await api.post<ApiResponse>(
-        import.meta.env.VITE_ROTA_REFRESH_TOKEN,
+        '/refresh-token',
         {},
         {
           withCredentials: true,
         }
       );
-      const { token, user } = res.data || {};
-      if (token && user) {
-        localStorage.setItem('user_data', JSON.stringify(user));
+      const { accessToken, user, message } = res.data || {};
+      if (accessToken && user) {
         setUser({ ...user, logado: true });
         setResponse(res.data);
-        scheduleRefresh(token);
+        scheduleRefresh(accessToken);
       } else {
-        setError({ message: res.data?.message });
+        setError({ message: message || 'Erro ao renovar token.' });
       }
     } catch (error) {
       handleApiError(error);
@@ -198,13 +194,12 @@ export const useConnectApi = () => {
   }, []);
 
   const resetPasswordRequest = useCallback(
-    async (token: string, newPassword: string, confirmNewPassword: string) => {
+    async (accessToken: string, newPassword: string, confirmNewPassword: string) => {
       setLoading(true);
       setError(null);
-      console.log(token, newPassword, confirmNewPassword);
       try {
         const res = await api.post<ApiResponse>(
-          `${import.meta.env.VITE_ROTA_TROCAR_SENHA}/${token}`,
+          `/reset-password/${accessToken}`,
           {
             newPassword: newPassword,
             confirmNewPassword: confirmNewPassword,
@@ -232,10 +227,10 @@ export const useConnectApi = () => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('jwt_token');
-    if (token) {
-      scheduleRefresh(token);
-    }
+    refreshAccessTokenRef.current = refreshAccessToken;
+  }, [refreshAccessToken]);
+
+  useEffect(() => {
     return () => {
       if (refreshTimeoutId.current) {
         clearTimeout(refreshTimeoutId.current);
@@ -248,7 +243,7 @@ export const useConnectApi = () => {
     verifyEmail,
     loginUser,
     logoutUser,
-    refreshToken,
+    refreshAccessToken,
     resendVerifyEmailCode,
     forgotPasswordRequest,
     resetPasswordRequest,

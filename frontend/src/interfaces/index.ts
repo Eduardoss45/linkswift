@@ -1,3 +1,5 @@
+// ! Criar um arquivo para separar tipos para cada modulo typescript
+
 export interface RegisterData {
   nome: string;
   email: string;
@@ -11,13 +13,16 @@ export interface LoginData {
 }
 
 export interface ApiResponse {
-  tipo?: string;
-  success?: boolean;
   message?: string;
-  token?: string;
-  user?: { id: string; nome: string; email: string; verificado: boolean };
-  url?: string;
-  senhaNecessaria?: boolean;
+  accessToken?: string;
+  user?: {
+    _id: string;
+    nome: string;
+    email: string;
+    verificado: boolean;
+    links: [];
+    createdAt: string;
+  };
 }
 
 export interface ErrorResponse {
@@ -32,6 +37,7 @@ export interface User {
   verificado: boolean;
   createdAt: string;
   verificationCode?: string;
+  logado?: boolean;
 }
 
 export interface ShortenLinkData {

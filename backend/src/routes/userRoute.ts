@@ -8,7 +8,7 @@ import {
   reenviarCodigo,
   forgotPassword,
   resetPassword,
-} from '../controllers/authController.js';
+} from '../controllers/userController.js';
 
 const router = express.Router();
 
