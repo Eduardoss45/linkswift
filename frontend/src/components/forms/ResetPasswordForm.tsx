@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 const ResetPasswordForm = () => {
   const { token } = useParams();
   const navigate = useNavigate();
-  const { resetPasswordRequest, loading } = useUser(); // removido error e res
+  const { resetPasswordRequest, loading } = useUser();
 
   const [formData, setFormData] = useState({
     password: '',

@@ -212,8 +212,8 @@ const ShortLinks = () => {
               value={formData.expira_em}
               onChange={e => {
                 let dias = parseInt(e.target.value) || 0;
-                if (dias > 365) dias = 365; // limite máximo
-                if (dias < 0) dias = 0; // mínimo 0
+                if (dias > 365) dias = 365;
+                if (dias < 0) dias = 0;
                 setFormData(prev => ({ ...prev, expira_em: dias.toString() }));
               }}
               disabled={!isAuthenticated}

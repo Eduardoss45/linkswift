@@ -14,7 +14,6 @@ api.interceptors.response.use(
   async err => {
     const originalRequest = err.config;
 
-    // Evita loop infinito
     if (
       err.response?.status === 401 &&
       !originalRequest._retry &&
@@ -23,9 +22,8 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       try {
         await api.post('/refresh-token', {}, { withCredentials: true });
-        return api(originalRequest); // Repete a requisição original
+        return api(originalRequest);
       } catch (refreshError) {
-        // Falha no refresh -> logout e rejeita
         const { logout } = useAuthStore.getState();
         logout();
         return Promise.reject(refreshError);
@@ -35,7 +33,6 @@ api.interceptors.response.use(
     return Promise.reject(err);
   }
 );
-
 
 export const useUser = () => {
   const { user, login, logout } = useAuthStore();
@@ -131,7 +128,6 @@ export const useUser = () => {
       logout();
     }
   }, [login, logout]);
-
 
   const resendVerifyEmailCode = useCallback(async (email: string) => {
     setLoading(true);
