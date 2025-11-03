@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLinkManager } from '@/hooks/useManagerLink.ts';
+import { useLinkManager } from '@/hooks/useLinks';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/authStore';
+import { ShortenLinkData } from '@/interfaces';
 
 const ShortLinks = () => {
   const { isAuthenticated } = useAuthStore();
@@ -20,7 +21,7 @@ const ShortLinks = () => {
     privado: false,
   });
 
-  const [shortenedUrl, setShortenedUrl] = useState('');
+  const [shortenedUrl, setShortenedUrl] = useState<string | null>('');
   const [senhaVisible, setSenhaVisible] = useState(false);
 
   const handleCopy = () => {
@@ -86,7 +87,7 @@ const ShortLinks = () => {
 
     try {
       const res = await shortenLink(finalData);
-      setShortenedUrl(res?.url || '');
+      setShortenedUrl(res.url || '');
       toast.success(res?.message || 'Link encurtado com sucesso!');
     } catch (err: any) {
       toast.error(err?.message || 'Falha ao encurtar link.');

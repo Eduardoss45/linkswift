@@ -1,6 +1,6 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useConnectApi } from '@/hooks/useConnectApi';
+import { useUser } from '@/hooks/useUsers';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 const ResetPasswordForm = () => {
   const { token } = useParams();
   const navigate = useNavigate();
-  const { resetPasswordRequest, loading } = useConnectApi(); // removido error e res
+  const { resetPasswordRequest, loading } = useUser(); // removido error e res
 
   const [formData, setFormData] = useState({
     password: '',
@@ -33,11 +33,7 @@ const ResetPasswordForm = () => {
     }
 
     try {
-      const res = await resetPasswordRequest(
-        token,
-        formData.password,
-        formData.confirmPassword
-      );
+      const res = await resetPasswordRequest(token, formData.password, formData.confirmPassword);
       toast.success(res?.message || 'Senha redefinida com sucesso!');
       setTimeout(() => navigate('/login'), 3000);
     } catch (err: any) {

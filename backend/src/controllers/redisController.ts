@@ -12,7 +12,7 @@ export const getAllData = async (req: Request, res: Response) => {
       const valor = await redis.get(chave);
       data[chave] = valor;
     }
-
+    
     return successResponse(res, 200, 'Dados do Redis encontrados', data);
   } catch (err) {
     res.status(500).json({ message: 'Erro ao buscar dados do Redis' });

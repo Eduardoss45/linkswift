@@ -1,50 +1,85 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
+import BadRequestError from '../errors/BadRequestError.js';
 import Link from '../models/linkModel.js';
 import NotFoundError from '../errors/NotFoundError.js';
 import UnauthorizedError from '../errors/UnauthorizedError.js';
 import { ioRedisClient } from '../cache/ioRedis.js';
+import { successResponse } from '../utils/response.js';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+
 const redis = ioRedisClient();
 
-export const redirectPrivateLink = async (req: Request, res: Response) => {
-  const { key } = req.params;
-  const userId = req.user?._id?.toString();
-  const data = await redis.get(key);
+// Tipagem para o payload do JWT
+interface AccessTokenPayload extends JwtPayload {
+  userId: string;
+}
 
-  if (!data) {
-    res.status(404).json({ message: 'Link não encontrado.' });
-    return;
+// Tipagem para os dados do link
+interface LinkData {
+  key: string;
+  url: string;
+  privado: boolean;
+  criado_por: string;
+  [key: string]: any;
+}
+
+// Tipagem para o Request com cookies
+interface RequestWithCookies extends Request {
+  cookies: {
+    accessToken?: string;
+    [key: string]: any;
+  };
+}
+
+export const redirectPrivateLink = async (
+  req: RequestWithCookies,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { key } = req.params;
+    const accessToken = req.cookies?.accessToken;
+
+    if (!accessToken) {
+      throw new UnauthorizedError({ message: 'Token de acesso não fornecido.' });
+    }
+
+    // Verifica e decodifica o token
+    let payload: AccessTokenPayload;
+    try {
+      payload = jwt.verify(accessToken, process.env.ACCESS_SECRET!) as AccessTokenPayload;
+    } catch (err) {
+      throw new UnauthorizedError({ message: 'Token inválido ou expirado.' });
+    }
+
+    // Busca link no Redis
+    const cachedData = await redis.get(key);
+    let linkData: LinkData;
+
+    if (cachedData) {
+      linkData = JSON.parse(cachedData) as LinkData;
+    } else {
+      // Busca link no MongoDB caso não esteja no cache
+      const linkFromDB = await Link.findOne({ key }).lean<LinkData>();
+      if (!linkFromDB) {
+        throw new NotFoundError({ message: 'Link não encontrado.' });
+      }
+      linkData = linkFromDB;
+      await redis.set(key, JSON.stringify(linkData), 'EX', 3600); // cache por 1h
+    }
+
+    // Valida se é privado
+    if (!linkData.privado) {
+      throw new BadRequestError({ message: 'Este link não é privado.' });
+    }
+
+    // Verifica se o usuário é o dono do link
+    if (linkData.criado_por.toString() !== payload.userId) {
+      throw new UnauthorizedError({ message: 'Acesso negado. Link pertence a outro usuário.' });
+    }
+
+    return successResponse(res, 200, 'Redirecionando.', { url: linkData.url });
+  } catch (error) {
+    next(error);
   }
-
-  const link = JSON.parse(data);
-
-  if (!link.privado) {
-    res.status(400).json({ message: 'Este link não é privado.' });
-    return;
-  }
-
-  if (link.criado_por.toString() !== userId) {
-    res.status(403).json({ message: 'Acesso negado. Link pertence a outro usuário.' });
-    return;
-  }
-
-  res.redirect(link.url);
-};
-
-export const redirectPrivateLinkWithCookie = async (req: Request, res: Response) => {
-  const { short_id } = req.params;
-  const token = req.cookies[`auth_${short_id}`];
-  if (!token) {
-    throw new UnauthorizedError({ message: 'Autorização necessária' });
-  }
-
-  const link = await Link.findOne({ shortUrl: short_id, token });
-  if (!link) {
-    throw new NotFoundError({ message: 'Link não encontrado' });
-  }
-
-  link.analytics.total_clicks += 1;
-  await link.save();
-
-  res.clearCookie(`auth_${short_id}`);
-  res.redirect(link.originalUrl);
 };

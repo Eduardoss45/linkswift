@@ -19,6 +19,7 @@ export interface UserDocument extends Document {
   password: string;
   links: (Types.ObjectId | LinkDocument)[];
   refreshToken?: string | null;
+  accessToken?: string | null;
   createdAt: Date;
   verificado: boolean;
   verificationCode?: string;

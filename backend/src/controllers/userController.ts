@@ -16,10 +16,10 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     const { nome, email, password, confirmPassword } = req.body;
     if (!nome || !email || !password || !confirmPassword) {
       throw new BadRequestError({
-        message:
-          'Verifique se os campos nome, email, password e confirmPassword foram preenchidos.',
+        message: 'Verifique se os campos nome, email, senha e confirmar senha foram preenchidos.',
       });
     }
+
     if (password !== confirmPassword) {
       throw new BadRequestError({ message: 'As senhas não coincidem.' });
     }
@@ -30,7 +30,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     const hashedPassword = await bcrypt.hash(password, 10);
     const verificationCode = crypto.randomBytes(3).toString('hex').toUpperCase();
 
-    const newUser = new UserModel({
+    const user = new UserModel({
       nome,
       email,
       password: hashedPassword,
@@ -38,33 +38,22 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       verificationCode,
     });
 
-    await newUser.save();
-
     await sendEmailToQueue({
       to: email,
       subject: 'Verifique seu e-mail',
       content: `Olá, ${nome}!\n\nSeu código de verificação é: ${verificationCode}`,
     });
 
-    const refreshToken = jwt.sign({ userId: newUser._id.toString() }, process.env.REFRESH_SECRET!, {
-      expiresIn: '30d',
-    });
-
-    newUser.refreshToken = refreshToken;
-    await newUser.save();
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    await user.save();
 
     successResponse(res, 201, 'Usuário cadastrado com sucesso!', {
       user: {
-        _id: newUser._id,
-        email: newUser.email,
-        nome: newUser.nome,
+        _id: user._id,
+        email: user.email,
+        nome: user.nome,
+        verificado: user.verificado,
+        links: user.links || [],
+        createdAt: user.createdAt,
       },
     });
   } catch (error) {
@@ -120,7 +109,8 @@ export const reenviarCodigo = async (req: Request, res: Response, next: NextFunc
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body; 
+
     if (!email || !password)
       throw new BadRequestError({
         message: 'Verifique se os campos email e password foram preenchidos.',
@@ -132,16 +122,16 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) throw new UnauthorizedError({ message: 'Senha incorreta.' });
 
-    const accessToken = jwt.sign({ userId: user._id.toString() }, process.env.JWT_SECRET!, {
-      expiresIn: '15m',
-    });
-
     const refreshToken = jwt.sign({ userId: user._id.toString() }, process.env.REFRESH_SECRET!, {
       expiresIn: '30d',
     });
 
+    const accessToken = jwt.sign({ userId: user._id.toString() }, process.env.ACCESS_SECRET!, {
+      expiresIn: '15m',
+    });
+
     user.refreshToken = refreshToken;
-    await user.save();
+    user.accessToken = accessToken;
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -151,8 +141,17 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       path: '/refresh-token',
     });
 
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      path: '/',
+    });
+
+    await user.save();
+
     successResponse(res, 200, 'Login bem-sucedido.', {
-      accessToken,
       user: {
         _id: user._id,
         email: user.email,
@@ -181,12 +180,22 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
     if (!user || user.refreshToken !== refreshToken)
       throw new ForbiddenError({ message: 'Token inválido.' });
 
-    const newAccessToken = jwt.sign({ userId: user._id.toString() }, process.env.JWT_SECRET || '', {
+    const accessToken = jwt.sign({ userId: user._id.toString() }, process.env.ACCESS_SECRET || '', {
       expiresIn: '15m',
     });
 
+    user.accessToken = accessToken;
+    await user.save();
+
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      path: '/',
+    });
+
     successResponse(res, 200, 'Token atualizado com sucesso.', {
-      accessToken: newAccessToken,
       user: {
         _id: user._id,
         email: user.email,
@@ -203,17 +212,24 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
 
 export const logout = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { refreshToken } = req.cookies;
-    if (!refreshToken)
-      throw new UnauthorizedError({ message: 'Token de atualização não fornecido.' });
+    const { refreshToken, accessToken } = req.cookies;
+    if (!refreshToken && accessToken)
+      throw new UnauthorizedError({ message: 'Tokens não foram fornecidos.' });
 
     const user = await UserModel.findOne({ refreshToken });
     if (!user) throw new NotFoundError({ message: 'Token inválido.' });
 
     user.refreshToken = null;
+    user.accessToken = null;
     await user.save();
 
     res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+
+    res.clearCookie('accessToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
@@ -233,16 +249,16 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     const user = await UserModel.findOne({ email });
     if (!user) throw new NotFoundError({ message: 'Usuário não encontrado.' });
 
-    const token = crypto
+    const resetPasswordToken = crypto
       .createHash('sha256')
       .update(`${user._id}${Date.now()}${crypto.randomBytes(20).toString('hex')}`)
       .digest('hex');
 
-    user.resetPasswordToken = token;
+    user.resetPasswordToken = resetPasswordToken;
     user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
     await user.save();
 
-    const resetLink = `${process.env.BASE_URL_FRONTEND}${process.env.RESET_PASS}${token}`;
+    const resetLink = `${process.env.BASE_URL_FRONTEND}${process.env.RESET_PASS}${resetPasswordToken}`;
     const htmlContent = `
       <p>Olá, ${user.nome}!</p>
       <p>Para redefinir sua senha, clique no link abaixo:</p>
@@ -267,20 +283,20 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
 
 export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { token } = req.params;
+    const { resetPasswordToken } = req.params;
     const { newPassword, confirmNewPassword } = req.body;
 
-    if (!token || !newPassword || !confirmNewPassword)
+    if (!resetPasswordToken || !newPassword || !confirmNewPassword)
       throw new BadRequestError({ message: 'Todos os campos são obrigatórios.' });
     if (newPassword !== confirmNewPassword)
       throw new BadRequestError({ message: 'As senhas não coincidem.' });
 
     const user = await UserModel.findOne({
-      resetPasswordToken: token,
+      resetPasswordToken: resetPasswordToken,
       resetPasswordExpires: { $gt: new Date() },
     });
 
-    if (!user) throw new BadRequestError({ message: 'Token inválido ou expirado' });
+    if (!user) throw new BadRequestError({ message: 'Token inválido ou expirado.' });
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;

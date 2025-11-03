@@ -3,26 +3,22 @@ import {
   shortenLinks,
   checkLink,
   redirectToLinks,
-  handshakeVerify,
 } from '../controllers/linkController.js';
-import {
-  redirectPrivateLink,
-  redirectPrivateLinkWithCookie,
-} from '../controllers/linkPrivateController.js';
+import { redirectPrivateLink } from '../controllers/linkPrivateController.js';
 import { redirectProtectedLink } from '../controllers/linkProtectedController.js';
-import { authenticateToken, optionalAuthenticateToken } from '../middlewares/authMiddleware.js';
 import { deleteAllData, getAllData } from '../controllers/redisController.js';
 
 const router = Router();
 
-router.post('/links', authenticateToken, shortenLinks);
-router.get('/links/:key', optionalAuthenticateToken, checkLink);
-router.get('/protected/:key', redirectProtectedLink);
+router.post('/links', shortenLinks);
+
+router.get('/check/:key', checkLink);
+
 router.get('/r/:key', redirectToLinks);
+router.post('/private/:key', redirectPrivateLink);
+router.get('/protected/:key', redirectProtectedLink);
+
 router.get('/get', getAllData);
 router.get('/delete', deleteAllData);
-router.get('/private/:key', authenticateToken, redirectPrivateLink);
-router.get('/redirect/:short_id', redirectPrivateLinkWithCookie);
-router.post('/handshake/verify', handshakeVerify);
 
 export default router;

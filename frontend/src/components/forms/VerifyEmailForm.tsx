@@ -1,4 +1,4 @@
-import { useConnectApi } from '@/hooks/useConnectApi.ts';
+import { useUser } from '@/hooks/useUsers';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState, useEffect } from 'react';
@@ -14,9 +14,9 @@ const VerifyEmailForm = () => {
   const [verifyResponse, setVerifyResponse] = useState<ApiResponse | null>(null);
   const [loadingVerify, setLoadingVerify] = useState(false);
   const [loadingResend, setLoadingResend] = useState(false);
-  const { resendVerifyEmailCode, verifyEmail } = useConnectApi();
+  const { resendVerifyEmailCode, verifyEmail } = useUser();
   const navigate = useNavigate();
-  const user = useAuthStore((state) => state.user);
+  const user = useAuthStore(state => state.user);
 
   if (!user) {
     return <p>Erro: usuário não autenticado.</p>;

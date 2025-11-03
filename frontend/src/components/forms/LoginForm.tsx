@@ -1,4 +1,4 @@
-import { useConnectApi } from '@/hooks/useConnectApi.ts';
+import { useUser } from '@/hooks/useUsers';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState, useEffect } from 'react';
@@ -11,14 +11,14 @@ const LoginForm = () => {
     email: '',
     password: '',
   });
-  const { loginUser, loading, error, response } = useConnectApi();
+  const { loginUser, loading, error, response } = useUser();
   const navigate = useNavigate();
   const login = useAuthStore(state => state.login);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -36,16 +36,12 @@ const LoginForm = () => {
   };
 
   useEffect(() => {
-    if (response?.user && response?.accessToken) {
-      const { user, accessToken } = response;
+    if (response?.user) {
+      const { user } = response;
       toast.success(response.message || 'Login realizado com sucesso!');
-      login(accessToken, user);
+
       setTimeout(() => {
-        if (user.verificado) {
-          navigate('/');
-        } else {
-          navigate('/verify-email');
-        }
+        navigate(user.verificado ? '/' : '/verify-email');
       }, 3000);
     }
 

@@ -5,13 +5,14 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { useLinkManager } from '@/hooks/useManagerLink';
+import { useLinkManager } from '@/hooks/useLinks';
 
 const RedirectLinks = () => {
   const { key } = useParams<{ key: string }>();
   const [senha, setSenha] = useState('');
   const [needsPassword, setNeedsPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [statusMessage, setStatusMessage] = useState('Carregando...');
   const { redirectToLink, checkLinkNeedsPassword, loading } = useLinkManager();
 
   useEffect(() => {
@@ -19,17 +20,23 @@ const RedirectLinks = () => {
       if (!key) return;
 
       try {
+        setStatusMessage('Carregando link...');
         const linkInfo = await checkLinkNeedsPassword(key);
 
         if (linkInfo.senhaNecessaria) {
-          // link protegido → mostrar tela de senha
           setNeedsPassword(true);
         } else {
-          // público ou privado → redireciona direto
+          setStatusMessage('Redirecionando...');
           await redirectToLink(key);
         }
-      } catch (error) {
-        toast.error('Link não encontrado ou inválido.');
+      } catch (error: any) {
+        if (error.response?.status === 401) {
+          setStatusMessage('Você não tem autorização para acessar este link.');
+          toast.error('Você não tem autorização para acessar este link.');
+        } else {
+          setStatusMessage(error?.response?.data?.message || 'Link não encontrado ou inválido.');
+          toast.error(error?.response?.data?.message || 'Link não encontrado ou inválido.');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -46,16 +53,26 @@ const RedirectLinks = () => {
     }
 
     try {
+      setStatusMessage('Verificando senha...');
       await redirectToLink(key, senha);
-    } catch {
-      toast.error('Senha incorreta ou erro ao redirecionar.');
+      setStatusMessage('Redirecionando...');
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        setStatusMessage('Você não tem autorização para acessar este link.');
+        toast.error('Você não tem autorização para acessar este link.');
+      } else {
+        setStatusMessage(
+          error?.response?.data?.message || 'Senha incorreta ou erro ao redirecionar.'
+        );
+        toast.error(error?.response?.data?.message || 'Senha incorreta ou erro ao redirecionar.');
+      }
     }
   };
 
   if (isLoading) {
     return (
       <div className="p-6 flex justify-center items-center min-h-[75vh] bg-gray-100">
-        Carregando...
+        {statusMessage}
       </div>
     );
   }
@@ -63,7 +80,7 @@ const RedirectLinks = () => {
   if (!needsPassword) {
     return (
       <div className="p-6 flex justify-center items-center min-h-[75vh] bg-gray-100">
-        Redirecionando...
+        {statusMessage}
       </div>
     );
   }

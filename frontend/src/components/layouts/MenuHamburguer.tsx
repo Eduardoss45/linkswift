@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useConnectApi } from '@/hooks/useConnectApi';
+import { useUser } from '@/hooks/useUsers';
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
@@ -10,7 +10,7 @@ const MenuHamburguer = () => {
   const { isAuthenticated, logout: logoutFromStore } = useAuthStore();
   const [menuFlutuante, setMenuFlutuante] = useState(false);
   const navigate = useNavigate();
-  const { logoutUser, error, response } = useConnectApi();
+  const { logoutUser, error, response } = useUser();
 
   const menuRef = useRef<HTMLDivElement>(null);
   const botaoRef = useRef<HTMLButtonElement>(null);

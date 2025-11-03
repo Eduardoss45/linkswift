@@ -7,6 +7,7 @@ const UserSchema = new Schema<UserDocument>({
   password: { type: String, required: true },
   links: [{ type: Schema.Types.ObjectId, ref: 'Link', default: [] }],
   refreshToken: { type: String, default: null },
+  accessToken: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
   verificado: { type: Boolean, default: false },
   verificationCode: { type: String },

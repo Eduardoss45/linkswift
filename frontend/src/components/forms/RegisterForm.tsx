@@ -1,4 +1,4 @@
-import { useConnectApi } from '@/hooks/useConnectApi.ts';
+import { useUser } from '@/hooks/useUsers';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +13,7 @@ const RegisterForm = () => {
     confirmPassword: '',
   });
   const navigate = useNavigate();
-  const { registerUser, loading, error, response } = useConnectApi();
+  const { registerUser, loading, error, response } = useUser();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });

@@ -10,10 +10,12 @@ const api = axios.create({
   withCredentials: true,
 });
 
+type ResponseType = ApiResponse | ShortenLinkData | CheckLinkResponse | null;
+
 export const useLinkManager = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorResponse | null>(null);
-  const [response, setResponse] = useState<ApiResponse | null>(null);
+  const [response, setResponse] = useState<ResponseType>(null);
 
   const handleApiError = (error: unknown) => {
     const err = error as { response?: { data: ErrorResponse } };
@@ -24,11 +26,8 @@ export const useLinkManager = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.post<ApiResponse>(import.meta.env.VITE_ROTA_SHORTEN, data, {
-        // ! headers: {
-        // !   Authorization: `Bearer ${localStorage.getItem('jwt_token') || ''}`,
-        // ! },
-      });
+      const res = await api.post<ShortenLinkData>('/links', data);
+
       setResponse(res.data);
       return res.data;
     } catch (err) {
@@ -42,12 +41,19 @@ export const useLinkManager = () => {
   const redirectToLink = useCallback(async (key: string, senha?: string) => {
     setLoading(true);
     setError(null);
+
     try {
-      const infoRes = await api.get<CheckLinkResponse>(`/links/${key}`);
+      const infoRes = await api.get<CheckLinkResponse>(`/check/${key}`);
       const linkInfo = infoRes.data;
-      let redirectUrl = '';
+
+      let redirectUrl: string;
+
       if (linkInfo.privado) {
-        redirectUrl = `/private/${key}`;
+        const res = await api.post<{ url: string }>(`/private/${key}`);
+        if (!res.data.url) {
+          throw new Error('Não foi possível obter a URL de redirecionamento.');
+        }
+        redirectUrl = res.data.url;
       } else if (linkInfo.senhaNecessaria) {
         if (!senha) {
           return { needsPassword: true };
@@ -56,13 +62,13 @@ export const useLinkManager = () => {
       } else {
         redirectUrl = `/r/${key}`;
       }
-      if (!linkInfo.url && !senha) {
-        return { pending: true };
-      }
-      window.location.href = `${import.meta.env.VITE_API_BASE_URL}${redirectUrl}`;
+
+      window.location.href = redirectUrl;
+
       return { success: true };
-    } catch (err) {
-      handleApiError(err);
+    } catch (err: any) {
+      const message = err.response?.data?.message || err.message || 'Erro ao redirecionar o link.';
+      setError({ message });
       throw err;
     } finally {
       setLoading(false);
@@ -73,7 +79,7 @@ export const useLinkManager = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get<ApiResponse>(`/links/${key}`);
+      const res = await api.get<CheckLinkResponse>(`/check/${key}`);
       setResponse(res.data);
       return res.data;
     } catch (err) {

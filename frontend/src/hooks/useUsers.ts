@@ -1,7 +1,6 @@
 import { RegisterData, LoginData, ApiResponse, ErrorResponse } from '../interfaces';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
 
 const api = axios.create({
@@ -10,10 +9,36 @@ const api = axios.create({
   withCredentials: true,
 });
 
-type JwtPayload = { exp: number };
+api.interceptors.response.use(
+  res => res,
+  async err => {
+    const originalRequest = err.config;
 
-export const useConnectApi = () => {
-  const { user, login, logout, setUser, setAccessToken } = useAuthStore();
+    // Evita loop infinito
+    if (
+      err.response?.status === 401 &&
+      !originalRequest._retry &&
+      originalRequest.url !== '/refresh-token'
+    ) {
+      originalRequest._retry = true;
+      try {
+        await api.post('/refresh-token', {}, { withCredentials: true });
+        return api(originalRequest); // Repete a requisição original
+      } catch (refreshError) {
+        // Falha no refresh -> logout e rejeita
+        const { logout } = useAuthStore.getState();
+        logout();
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(err);
+  }
+);
+
+
+export const useUser = () => {
+  const { user, login, logout } = useAuthStore();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorResponse | null>(null);
@@ -26,22 +51,6 @@ export const useConnectApi = () => {
     const err = error as { response?: { data: ErrorResponse } };
     setError(err.response?.data || { message: 'Erro ao conectar à API' });
   };
-
-  // Agenda renovação automática do token
-  const scheduleRefresh = useCallback((accessToken: string) => {
-    if (refreshTimeoutId.current) clearTimeout(refreshTimeoutId.current);
-
-    try {
-      const decoded = jwtDecode<JwtPayload>(accessToken);
-      const timeout = decoded.exp * 1000 - Date.now() - 60_000;
-      if (timeout > 0)
-        refreshTimeoutId.current = window.setTimeout(() => {
-          refreshAccessTokenRef.current?.();
-        }, timeout);
-    } catch (err) {
-      console.error('Erro ao decodificar token para agendar refresh', err);
-    }
-  }, []);
 
   const registerUser = useCallback(async (data: RegisterData) => {
     setLoading(true);
@@ -80,10 +89,9 @@ export const useConnectApi = () => {
       setError(null);
       try {
         const res = await api.post<ApiResponse>('/login', data);
-        const { accessToken, user } = res.data || {};
-        if (accessToken && user) {
-          login(accessToken, { ...user, logado: true });
-          scheduleRefresh(accessToken);
+        const { user } = res.data || {};
+        if (user) {
+          login({ ...user, logado: true });
           setResponse(res.data);
         } else {
           setError({ message: res.data?.message });
@@ -94,7 +102,7 @@ export const useConnectApi = () => {
         setLoading(false);
       }
     },
-    [login, scheduleRefresh]
+    [login]
   );
 
   const logoutUser = useCallback(async () => {
@@ -114,16 +122,16 @@ export const useConnectApi = () => {
   const refreshAccessToken = useCallback(async () => {
     try {
       const res = await api.post<ApiResponse>('/refresh-token', {}, { withCredentials: true });
-      const { accessToken, user } = res.data || {};
-      if (accessToken && user) {
-        login(accessToken, { ...user, logado: true });
-        scheduleRefresh(accessToken);
+      const { user } = res.data || {};
+      if (user) {
+        login({ ...user, logado: true });
       }
     } catch (error) {
       console.warn('Falha ao renovar token', error);
       logout();
     }
-  }, [login, logout, scheduleRefresh]);
+  }, [login, logout]);
+
 
   const resendVerifyEmailCode = useCallback(async (email: string) => {
     setLoading(true);

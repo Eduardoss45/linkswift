@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-import { useConnectApi } from '@/hooks/useConnectApi';
+import { useUser } from '@/hooks/useUsers';
 import { useAuthStore } from '@/store/authStore';
 
 const AuthInitializer = () => {
-  const { user, refreshToken } = useConnectApi();
+  const { user, refreshAccessToken } = useUser();
   const { setUser, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
@@ -13,12 +13,12 @@ const AuthInitializer = () => {
   useEffect(() => {
     if (!isAuthenticated) return;
     const interval = setInterval(() => {
-      refreshToken();
-    }, 14 * 60 * 1000); // 14 minutos
+      refreshAccessToken;
+    }, 14 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [isAuthenticated, refreshToken]);
+  }, [isAuthenticated]);
 
-  return null; // Este componente não renderiza nada
+  return null;
 };
 
 export default AuthInitializer;

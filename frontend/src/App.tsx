@@ -3,14 +3,15 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './components/layouts/Navbar';
 import Footer from './components/layouts/Footer';
 
-import { useConnectApi } from './hooks/useConnectApi';
+import { useUser } from './hooks/useUsers';
 import { useAuthStore } from './store/authStore';
 import { useEffect, useState } from 'react';
+import { User } from './interfaces/index';
 
 function App() {
   const location = useLocation();
-  const { refreshAccessToken } = useConnectApi();
-  const { setUser } = useAuthStore();
+  const { refreshAccessToken } = useUser();
+  const { login } = useAuthStore();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   const noLayout = [
@@ -30,13 +31,28 @@ function App() {
       try {
         await refreshAccessToken();
       } catch {
-        setUser(null);
+        const currentUser = useAuthStore.getState().user;
+
+        const user: User = {
+          ...(currentUser ?? {
+            _id: '',
+            nome: '',
+            email: '',
+            links: [],
+            verificado: true,
+            createdAt: new Date().toISOString(),
+          }),
+          logado: true,
+        };
+
+        login(user);
       } finally {
         setIsCheckingAuth(false);
       }
     };
+
     initAuth();
-  }, [refreshAccessToken, setUser]);
+  }, [refreshAccessToken, login]);
 
   if (isCheckingAuth) {
     return <div>Carregando...</div>;

@@ -1,5 +1,3 @@
-// ! Criar um arquivo para separar tipos para cada modulo typescript
-
 export interface RegisterData {
   nome: string;
   email: string;
