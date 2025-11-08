@@ -78,17 +78,17 @@ const MenuHamburguer = () => {
           >
             {isAuthenticated ? (
               <>
-                <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
-                  Meus Links
+                <div className="btn-menu-flutuante" onClick={() => navigate('/')}>
+                  Encurtador
                 </div>
-                <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
+                <div className="btn-menu-flutuante" onClick={() => navigate('/configurations')}>
                   Configurações
                 </div>
                 <div className="btn-menu-flutuante" onClick={() => navigate('/dashboard')}>
                   Dashboard
                 </div>
-                <div className="btn-menu-flutuante" onClick={() => navigate('/login')}>
-                  Ajuda
+                <div className="btn-menu-flutuante" onClick={() => navigate('/about')}>
+                  Sobre
                 </div>
                 <div className="btn-menu-flutuante" onClick={() => logout()}>
                   Sair

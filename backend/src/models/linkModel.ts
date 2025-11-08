@@ -10,8 +10,11 @@ const LinkSchema = new Schema<LinkDocument>({
   expira_em: { type: Date, required: true },
   analytics: {
     total_clicks: { type: Number, default: 0 },
-    clicks_por_dia: [{ data: String, quantidade: Number }],
-    ultimos_ips: [String],
+    clicks_por_dia: {
+      type: [{ data: String, quantidade: Number }],
+      default: [],
+    },
+    ultimos_ips: { type: [String], default: [] },
   },
   criado_em: { type: Date, default: Date.now },
 });

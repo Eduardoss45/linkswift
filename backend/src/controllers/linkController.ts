@@ -8,7 +8,6 @@ import LinkModel from '../models/linkModel.js';
 import BadRequestError from '../errors/BadRequestError.js';
 import UnauthorizedError from '../errors/UnauthorizedError.js';
 import NotFoundError from '../errors/NotFoundError.js';
-import ForbiddenError from '../errors/ForbiddenError.js';
 import { successResponse } from '../utils/response.js';
 import { ioRedisClient } from '../cache/ioRedis.js';
 
@@ -27,10 +26,12 @@ export async function shortenLinks(req: Request, res: Response, next: NextFuncti
         if (typeof verified !== 'string' && verified.userId) {
           criado_por = verified.userId.toString();
         }
-      } catch {
-        throw new UnauthorizedError({
-          message: 'Token inválido ou expirado. Faça login novamente.',
-        });
+      } catch (err) {
+        return next(
+          new UnauthorizedError({
+            message: 'Token inválido ou expirado. Faça login novamente.',
+          })
+        );
       }
     }
 
@@ -166,9 +167,49 @@ export const redirectToLinks = async (
       return successResponse(res, 201, 'Link autorizado', { url: linkData.url });
     }
 
+    const ip = req.ip ?? '0.0.0.0';
+    const redisKey = `link:${key}:ip:${ip}`;
+
+    const cachedClick = await redis.get(redisKey);
+    if (cachedClick) {
+      return res.redirect(linkData.url);
+    }
+
+    await redis.set(redisKey, '1', 'EX', 5);
+
+    const link = await LinkModel.findOne({ key });
+
+    const agora = new Date();
+    const hoje = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+    if (link) {
+      const analytics = link.analytics;
+
+      analytics.total_clicks++;
+
+      const clicksPorDia = Array.isArray(analytics.clicks_por_dia) ? analytics.clicks_por_dia : [];
+
+      const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+      const diaExistente = clicksPorDia.find(d => d.data === hoje);
+      if (diaExistente) {
+        diaExistente.quantidade++;
+      } else {
+        clicksPorDia.push({ data: hoje, quantidade: 1 });
+      }
+
+      analytics.clicks_por_dia = clicksPorDia;
+
+      analytics.ultimos_ips.push(req.ip ?? '0.0.0.0');
+      if (analytics.ultimos_ips.length > 10) {
+        analytics.ultimos_ips = analytics.ultimos_ips.slice(-10);
+      }
+
+      await link.save();
+    }
+
     return res.redirect(linkData.url);
   } catch (err) {
-    console.error('⚠️ Erro inesperado em redirectToLinks:', err);
     next(err);
   }
 };
