@@ -7,7 +7,7 @@ const LinkSchema = new Schema<LinkDocument>({
   criado_por: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   senha: { type: String, default: null },
   privado: { type: Boolean, default: false },
-  expira_em: { type: Date, required: true, index: true },
+  expira_em: { type: Date, required: true },
   analytics: {
     total_clicks: { type: Number, default: 0 },
     clicks_por_dia: [{ data: String, quantidade: Number }],

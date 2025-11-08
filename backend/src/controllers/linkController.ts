@@ -105,7 +105,7 @@ export async function shortenLinks(req: Request, res: Response, next: NextFuncti
       await UserModel.findByIdAndUpdate(criado_por, { $push: { links: newLink._id } });
     }
 
-    const shortUrl = `${process.env.BASE_URL_FRONTEND}/${key}`;
+    const shortUrl = `${process.env.BASE_URL_FRONTEND}/r/${key}`;
     return successResponse(res, 201, 'Link encurtado com sucesso', { url: shortUrl });
   } catch (error) {
     next(error);
@@ -121,9 +121,14 @@ export const redirectToLinks = async (
     const { key } = req.params;
     const { senha } = req.query as { senha?: string };
 
-    const cacheData = await redis.get(key);
+    let cacheData = await redis.get(key);
     if (!cacheData) {
-      return next(new NotFoundError({ message: 'Link não encontrado.' }));
+      const dbLink = await LinkModel.findOne({ key });
+      if (!dbLink) {
+        return next(new NotFoundError({ message: 'Link não encontrado.' }));
+      }
+      await redis.set(key, JSON.stringify(dbLink), 'EX', 3600);
+      cacheData = JSON.stringify(dbLink);
     }
 
     const linkData = JSON.parse(cacheData);

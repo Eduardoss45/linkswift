@@ -58,9 +58,9 @@ export const useLinkManager = () => {
         if (!senha) {
           return { needsPassword: true };
         }
-        redirectUrl = `/protected/${key}?senha=${senha}`;
+        redirectUrl = `${import.meta.env.VITE_API_BASE_URL}/protected/${key}?senha=${senha}`;
       } else {
-        redirectUrl = `/r/${key}`;
+        redirectUrl = `${import.meta.env.VITE_API_BASE_URL}/r/${key}`;
       }
 
       window.location.href = redirectUrl;

@@ -22,7 +22,8 @@ createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path="/" element={<App />}>
           <Route index element={<ShortLinks />} />
-          <Route path="/:key" element={<RedirectLinks />} />
+          <Route path="/r/:key" element={<RedirectLinks />} />
+          <Route path="/protected/:key" element={<RedirectLinks />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route element={<RenderForms />}>
             <Route path="verify-email" element={<VerifyEmailForm />} />
