@@ -245,6 +245,50 @@ export const checkLink = async (req: Request, res: Response, next: NextFunction)
   }
 };
 
+export const deleteLink = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { key } = req.params;
+    const { accessToken } = req.cookies;
+
+    if (!accessToken) {
+      throw new UnauthorizedError({ message: 'Token de acesso não fornecido.' });
+    }
+
+    const verified = jwt.verify(accessToken, process.env.ACCESS_SECRET || '');
+    if (typeof verified === 'string' || !verified.userId) {
+      throw new UnauthorizedError({ message: 'Token inválido ou expirado.' });
+    }
+
+    const userId = verified.userId.toString();
+
+    const link = await LinkModel.findOne({ key });
+
+    if (!link) {
+      throw new NotFoundError({ message: 'Link não encontrado.' });
+    }
+
+    if (link.criado_por?.toString() !== userId) {
+      throw new UnauthorizedError({
+        message: 'Você não tem permissão para deletar este link.',
+      });
+    }
+
+    await LinkModel.deleteOne({ key });
+
+    await UserModel.findByIdAndUpdate(userId, { $pull: { links: link._id } });
+
+    await redis.del(key);
+
+    successResponse(res, 200, 'Link deletado com sucesso');
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const helloLinkSwift = async (
   req: Request,
   res: Response,

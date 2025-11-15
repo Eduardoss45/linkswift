@@ -9,14 +9,14 @@ import { errorHandler } from './middleware/errors.js';
 import { connectRabbitMQ } from './rabbitmq/rabbitmq.js';
 
 const app = express();
-const port = 3000;
+const port = 4000;
 
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
-app.use(errorHandler);
 
 app.use('/', routes);
+app.use(errorHandler);
 
 connectDB();
 connectRabbitMQ();

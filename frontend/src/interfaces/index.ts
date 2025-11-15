@@ -52,3 +52,20 @@ export interface CheckLinkResponse {
   senhaNecessaria: boolean;
   url: string | null;
 }
+
+export interface Link {
+  _id: string;
+  url: string;
+  key: string;
+  nome: string | null;
+  privado: boolean;
+  expira_em: string;
+  criado_em: string;
+  analytics: {
+    total_clicks: number;
+    clicks_por_dia: {
+      data: string;
+      quantidade: number;
+    }[];
+  };
+}

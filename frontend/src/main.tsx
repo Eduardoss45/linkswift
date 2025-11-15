@@ -1,5 +1,3 @@
-import Configurations from './pages/Configurations.tsx';
-import About from './pages/About.tsx';
 import VerifyEmailForm from './components/forms/VerifyEmailForm.tsx';
 import RegisterForm from './components/forms/RegisterForm.tsx';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -27,8 +25,6 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/r/:key" element={<RedirectLinks />} />
           <Route path="/protected/:key" element={<RedirectLinks />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="configurations" element={<Configurations />} />
-          <Route path="about" element={<About />} />
           <Route element={<RenderForms />}>
             <Route path="verify-email" element={<VerifyEmailForm />} />
             <Route path="login" element={<LoginForm />} />

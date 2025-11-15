@@ -90,6 +90,36 @@ export const useLinkManager = () => {
     }
   }, []);
 
+  const getUserLinks = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.get('/users/links');
+      setResponse(res.data);
+      return res.data;
+    } catch (err) {
+      handleApiError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const deleteLink = useCallback(async (key: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.delete(`/links/${key}`);
+      setResponse(res.data);
+      return res.data;
+    } catch (err) {
+      handleApiError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const reset = () => {
     setError(null);
     setResponse(null);
@@ -99,6 +129,8 @@ export const useLinkManager = () => {
     shortenLink,
     redirectToLink,
     checkLinkNeedsPassword,
+    getUserLinks,
+    deleteLink,
     loading,
     error,
     response,
